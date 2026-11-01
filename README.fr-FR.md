@@ -4,7 +4,7 @@
 
 Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise un **ESP32-S3**, **ESP-IDF**, **LVGL** ainsi que des composants personnalisés intégrés afin de fournir un panneau de contrôle local pour **Home Assistant**.
 
-## About This Fork
+## A propos de ce Fork
 
 Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages
 Le developpement des nouvelles fonctionalités est assisté pa Claude (free/sonnet 5.5)
