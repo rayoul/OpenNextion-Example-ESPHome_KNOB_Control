@@ -1,6 +1,5 @@
 # OpenNextion ESPHome Knob Control
 
-[简体中文](README.zh-CN.md)
 
 ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP32-S3, ESP-IDF, LVGL, and bundled custom components to provide a local Home Assistant control panel.
 
