@@ -15,8 +15,12 @@ ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP3
   <img src="docs/IMG_20261101_225842.jpg" alt="Description" style="width:25%; height:auto;">
 </p>
 
-## Features
+## NEW Features
+- add sht31-D temp and humidity sensor, data on home screen and upload to Home Assistant
+- add climate entity to select in home assistant
+- add climate change and mode change on screen
 
+## Features
 - Controls Home Assistant switches, lights, plugs, covers, and automations from the display.
 - Supports rotary and push-button input, screen brightness, standby settings, and standby weather.
 - Provides Wi-Fi captive-portal provisioning when no network has been configured.
