@@ -198,4 +198,12 @@ https://opennextion.github.io/OpenNextion-Example-ESPHome_KNOB_Control/
 - `firmware/` : image OTA et manifeste de mise à jour.
 - `User Manual/` : manuel utilisateur web intégré.
 
+## Dépannage
+
+1. **Le port série n'est pas détecté :**
+   Utilisez un câble USB compatible transfert de données, vérifiez que le système d'exploitation détecte correctement le périphérique série et assurez-vous qu'aucune autre application n'utilise ce port.
+
+2. **Les ressources ou composants sont introuvables lors de la compilation :**
+   Exécutez les commandes depuis la racine du dépôt cloné et conservez l'ensemble des répertoires du projet.
+
   
