@@ -134,6 +134,35 @@ inline const std::array<const char *, 1> &automation_attributes() {
   return attrs;
 }
 
+inline const std::array<const char *, 6> &climate_attributes() {
+  static const std::array<const char *, 6> attrs{{
+      "current_temperature",
+      "temperature",
+      "hvac_action",
+      "preset_mode",
+      "min_temp",
+      "max_temp",
+  }};
+  return attrs;
+}
+
+// État runtime (RAM) des entités climate, indexé par slot UI compact.
+struct ClimateSlotState {
+  std::string entity_id{};
+  float current_temperature{NAN};
+  float target_temperature{NAN};
+  float min_temp{7.0f};
+  float max_temp{20.0f};
+  std::string hvac_mode{};    // état HA : "heat", "off", ...
+  std::string hvac_action{};  // "heating", "idle", "off"
+  std::string preset_mode{};  // "none", "eco", "away", ...
+};
+
+inline std::array<ClimateSlotState, custom_logic::CONFIGURABLE_DEVICE_SLOT_COUNT> &climate_slot_states() {
+  static std::array<ClimateSlotState, custom_logic::CONFIGURABLE_DEVICE_SLOT_COUNT> states{};
+  return states;
+}
+
 inline const std::array<const char *, 3> &weather_attributes() {
   static const std::array<const char *, 3> attrs{{"temperature", "temperature_unit", "humidity"}};
   return attrs;
@@ -361,7 +390,11 @@ class DeviceSlotStateUpdater {
         return;
       }
     }
-    if (field == "state") {
+    if (this->is_climate_() && (field == "state" || field == "current_temperature" || field == "temperature" ||
+                                field == "hvac_action" || field == "preset_mode" || field == "min_temp" ||
+                                field == "max_temp")) {
+      this->apply_climate_field_(field, value);
+    } else if (field == "state") {
       this->apply_power_or_cover_state_(value);
     } else if (field == "brightness") {
       this->apply_brightness_(value);
@@ -478,6 +511,7 @@ class DeviceSlotStateUpdater {
   bool is_light_() const { return has_prefix(this->entity_id_, "light."); }
   bool is_cover_() const { return has_prefix(this->entity_id_, "cover."); }
   bool is_automation_() const { return has_prefix(this->entity_id_, "automation."); }
+  bool is_climate_() const { return has_prefix(this->entity_id_, "climate."); }
 
   int parse_int_(const std::string &value, int fallback) const {
     char *end = nullptr;
@@ -585,6 +619,45 @@ class DeviceSlotStateUpdater {
       return true;
     }
     return false;
+  }
+
+  void apply_climate_field_(const std::string &field, const std::string &value) {
+    const size_t ui_slot = this->ui_slot_();
+    if (ui_slot == static_cast<size_t>(-1) || ui_slot >= climate_slot_states().size()) {
+      return;
+    }
+    ClimateSlotState &st = climate_slot_states()[ui_slot];
+    if (st.entity_id != this->entity_id_) {
+      st = ClimateSlotState{};
+      st.entity_id = this->entity_id_;
+    }
+    if (field == "state") {
+      st.hvac_mode = value;
+    } else if (field == "hvac_action") {
+      st.hvac_action = value;
+    } else if (field == "preset_mode") {
+      st.preset_mode = value;
+    } else {
+      char *end = nullptr;
+      const float parsed = strtof(value.c_str(), &end);
+      if (end == value.c_str()) {
+        return;  // "None", "unknown"...
+      }
+      if (field == "current_temperature") {
+        st.current_temperature = parsed;
+      } else if (field == "temperature") {
+        st.target_temperature = parsed;
+      } else if (field == "min_temp") {
+        st.min_temp = parsed;
+      } else if (field == "max_temp") {
+        st.max_temp = parsed;
+      }
+    }
+    ESP_LOGI(TAG, "%s climate ui_slot=%u entity=%s mode=%s action=%s preset=%s cur=%.1f target=%.1f min=%.1f max=%.1f",
+             this->slot_label_().c_str(), static_cast<unsigned>(ui_slot + 1), this->entity_id_.c_str(),
+             st.hvac_mode.c_str(), st.hvac_action.c_str(), st.preset_mode.c_str(),
+             static_cast<double>(st.current_temperature), static_cast<double>(st.target_temperature),
+             static_cast<double>(st.min_temp), static_cast<double>(st.max_temp));
   }
 
   void apply_power_or_cover_state_(const std::string &state) {
@@ -833,6 +906,10 @@ inline void subscribe_entity(esphome::api::APIServer *api_server, size_t slot, c
     }
   } else if (has_prefix(entity_id, "automation.")) {
     for (const char *attribute : automation_attributes()) {
+      subscribe_field(api_server, slot, entity_id, attribute, attribute);
+    }
+  } else if (has_prefix(entity_id, "climate.")) {
+    for (const char *attribute : climate_attributes()) {
       subscribe_field(api_server, slot, entity_id, attribute, attribute);
     }
   }

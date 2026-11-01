@@ -830,10 +830,10 @@ text_sensor:
       return {"https://opennextion.github.io/OpenNextion-Example-ESPHome_KNOB_Control/"};
 
 switch:
-  - platform: gpio
+  - platform: template
     id: normal_gpio_io10
     name: "HMI IO10"
-    pin: GPIO10
+    optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       then:
@@ -855,10 +855,10 @@ switch:
               }
             }
             if (id(normal_device_detail_active)) id(refresh_normal_switch_detail_page).execute();
-  - platform: gpio
+  - platform: template
     id: normal_gpio_io11
     name: "HMI IO11"
-    pin: GPIO11
+    optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       then:
@@ -1162,6 +1162,14 @@ globals:
     restore_value: no
     initial_value: 'false'
   - id: normal_device_detail_curtain_adjust_pending
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: normal_device_detail_climate_target_x10
+    type: int
+    restore_value: no
+    initial_value: '190'
+  - id: normal_device_detail_climate_adjust_active
     type: bool
     restore_value: no
     initial_value: 'false'

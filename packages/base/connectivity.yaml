@@ -13,6 +13,7 @@ ota:
   # Production OTA only: Home Assistant exposes the update entity below and
   # the device pulls the released firmware from the HTTPS manifest.
   - platform: http_request
+  - platform: esphome
 
 update:
   - platform: http_request

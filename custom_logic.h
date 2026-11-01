@@ -45,6 +45,7 @@ enum NormalDeviceDetailKind : int {
   NORMAL_DEVICE_DETAIL_KIND_AUTOMATION = 10,
   NORMAL_DEVICE_DETAIL_KIND_SETTINGS_USER_MANUAL = 11,
   NORMAL_DEVICE_DETAIL_KIND_SETTINGS_USER_MANUAL_QR_CODE = 12,
+  NORMAL_DEVICE_DETAIL_KIND_CLIMATE = 13,
 };
 static constexpr uint8_t NORMAL_LIGHT_FEEDBACK_BRIGHTNESS = 0x01;
 static constexpr uint8_t NORMAL_LIGHT_FEEDBACK_COLOR_TEMPERATURE = 0x02;
@@ -2078,6 +2079,9 @@ inline std::string normal_ui_type_from_entity_id(const std::string &entity_id) {
   if (domain == "automation") {
     return "automation";
   }
+  if (domain == "climate") {
+    return "climate";
+  }
   return domain.empty() ? "switch" : domain;
 }
 
@@ -2094,6 +2098,9 @@ inline std::string custom_type_from_device1_type_option(const std::string &optio
   }
   if (option == "Automation") {
     return "automation";
+  }
+  if (option == "Climate") {
+    return "climate";
   }
   return "switch";
 }
@@ -2217,6 +2224,8 @@ inline std::string preferred_device_type_option(size_t slot, const char *const *
     preferred = light_type_option_from_custom_mask(cached_device_custom_light_capability_mask(slot));
   } else if (domain == "automation") {
     preferred = "Automation";
+  } else if (domain == "climate") {
+    preferred = "Climate";
   } else {
     preferred = "Switch";
   }
@@ -2249,6 +2258,8 @@ inline bool apply_device_type_options(size_t slot, esphome::select::Select *my_s
     option_count = build_light_type_options(get_device_inferred_light_capability_mask(slot), options, 4);
   } else if (domain == "automation") {
     options[option_count++] = "Automation";
+  } else if (domain == "climate") {
+    options[option_count++] = "Climate";
   } else {
     options[option_count++] = "none";
   }
@@ -3580,7 +3591,8 @@ inline bool is_supported_normal_device_entity_id(const char *entity_id) {
     return true;
   }
   return strncmp(entity_id, "switch.", 7) == 0 || strncmp(entity_id, "light.", 6) == 0 ||
-         strncmp(entity_id, "cover.", 6) == 0 || strncmp(entity_id, "automation.", 11) == 0;
+         strncmp(entity_id, "cover.", 6) == 0 || strncmp(entity_id, "automation.", 11) == 0 ||
+         strncmp(entity_id, "climate.", 8) == 0;
 }
 
 inline bool is_local_hmi_gpio_switch_entity_id(const std::string &entity_id) {
@@ -4637,6 +4649,7 @@ inline bool fixed_options_contains(const esphome::FixedVector<const char *> &opt
 }  // namespace custom_logic
 
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_AUTOMATION;
+using custom_logic::NORMAL_DEVICE_DETAIL_KIND_CLIMATE;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_CURTAIN;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_DIMMING_LIGHT;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_LIGHT;

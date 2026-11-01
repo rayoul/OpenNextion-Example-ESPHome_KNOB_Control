@@ -596,7 +596,8 @@ binary_sensor:
                              device_type == "light" || device_type == "curtain" ||
                              device_type == "cover" || device_type == "chazuo" || device_type == "liang" ||
                              device_type == "dimming_light" || device_type == "dimmable_light" ||
-                             device_type == "dimming" || device_type == "automation";
+                             device_type == "dimming" || device_type == "automation" ||
+                             device_type == "climate";
                   then:
                     - script.execute: enter_normal_switch_detail
                     - lambda: |-
@@ -698,6 +699,7 @@ interval:
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_LIGHT ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_PLUG ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CURTAIN ||
+                        id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS_WIFI ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS_BRIGHTNESS ||
@@ -828,6 +830,39 @@ sensor:
               - script.execute: refresh_normal_settings_detail_page
               - lambda: |-
                   id(ui_presenter)->notify_user_activity();
+        - if:
+            condition:
+              lambda: |-
+                return id(normal_knob_event_pass) &&
+                       !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
+                       id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+                       id(normal_device_detail_online) &&
+                       !id(key_btn).state;
+            then:
+              - lambda: |-
+                  int detail_index = id(normal_device_detail_index);
+                  if (detail_index < 0) detail_index = 0;
+                  if (detail_index > 9) detail_index = 9;
+                  const auto &st = custom_logic_entity_sub::climate_slot_states()[detail_index];
+                  int min_x10 = 70;
+                  int max_x10 = 200;
+                  if (st.entity_id == id(ui_presenter)->get_normal_device_entity_id(detail_index) && st.min_temp < st.max_temp) {
+                    min_x10 = (int) lroundf(st.min_temp * 10.0f);
+                    max_x10 = (int) lroundf(st.max_temp * 10.0f);
+                  }
+                  int target_x10 = id(normal_device_detail_climate_target_x10);
+                  if (!id(normal_device_detail_climate_adjust_active)) {
+                    target_x10 = ((target_x10 + 2) / 5) * 5;
+                  }
+                  target_x10 = std::clamp(target_x10 + 5, min_x10, max_x10);
+                  id(normal_device_detail_climate_target_x10) = target_x10;
+                  id(normal_device_detail_climate_adjust_active) = true;
+                  ESP_LOGI("input", "climate detail clockwise: target_x10=%d", target_x10);
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: refresh_normal_climate_detail_page
+              - script.execute:
+                  id: commit_normal_climate_setpoint
+                  wait_ms: 1500
         - if:
             condition:
               lambda: |-
@@ -1250,6 +1285,39 @@ sensor:
               - script.execute: refresh_normal_settings_detail_page
               - lambda: |-
                   id(ui_presenter)->notify_user_activity();
+        - if:
+            condition:
+              lambda: |-
+                return id(normal_knob_event_pass) &&
+                       !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
+                       id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+                       id(normal_device_detail_online) &&
+                       !id(key_btn).state;
+            then:
+              - lambda: |-
+                  int detail_index = id(normal_device_detail_index);
+                  if (detail_index < 0) detail_index = 0;
+                  if (detail_index > 9) detail_index = 9;
+                  const auto &st = custom_logic_entity_sub::climate_slot_states()[detail_index];
+                  int min_x10 = 70;
+                  int max_x10 = 200;
+                  if (st.entity_id == id(ui_presenter)->get_normal_device_entity_id(detail_index) && st.min_temp < st.max_temp) {
+                    min_x10 = (int) lroundf(st.min_temp * 10.0f);
+                    max_x10 = (int) lroundf(st.max_temp * 10.0f);
+                  }
+                  int target_x10 = id(normal_device_detail_climate_target_x10);
+                  if (!id(normal_device_detail_climate_adjust_active)) {
+                    target_x10 = ((target_x10 + 2) / 5) * 5;
+                  }
+                  target_x10 = std::clamp(target_x10 - 5, min_x10, max_x10);
+                  id(normal_device_detail_climate_target_x10) = target_x10;
+                  id(normal_device_detail_climate_adjust_active) = true;
+                  ESP_LOGI("input", "climate detail anticlockwise: target_x10=%d", target_x10);
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: refresh_normal_climate_detail_page
+              - script.execute:
+                  id: commit_normal_climate_setpoint
+                  wait_ms: 1500
         - if:
             condition:
               lambda: |-

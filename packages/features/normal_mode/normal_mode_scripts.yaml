@@ -731,7 +731,7 @@ script:
             id(normal_detail_exit_switch_ready) = held_ms >= 688;
             id(normal_detail_exit_light_ready) = false;
             id(normal_detail_exit_settings_ready) = false;
-          } else if (kind == NORMAL_DEVICE_DETAIL_KIND_CURTAIN) {
+          } else if (kind == NORMAL_DEVICE_DETAIL_KIND_CURTAIN || kind == NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {
             id(normal_detail_exit_switch_ready) = held_ms >= 688;
             id(normal_detail_exit_light_ready) = false;
             id(normal_detail_exit_settings_ready) = false;
@@ -765,6 +765,7 @@ script:
             case NORMAL_DEVICE_DETAIL_KIND_SWITCH:
             case NORMAL_DEVICE_DETAIL_KIND_PLUG:
             case NORMAL_DEVICE_DETAIL_KIND_CURTAIN:
+            case NORMAL_DEVICE_DETAIL_KIND_CLIMATE:
             case NORMAL_DEVICE_DETAIL_KIND_AUTOMATION:
               id(normal_detail_exit_allowed) = id(normal_detail_exit_switch_ready);
               break;
@@ -908,6 +909,149 @@ script:
                                          ? "WiFi disconnected"
                                          : (!id(normal_ha_api_connected) ? "Home Assistant\ndisconnected" : "Device Offline");
           lv_label_set_text(id(normal_curtain_detail_offline_text), offline_text);
+
+  - id: refresh_normal_climate_detail_page
+    mode: restart
+    then:
+      - lambda: |-
+          if (!id(ui_presenter)->is_normal_mode_active() ||
+              id(ui_presenter)->is_standby_active() ||
+              !id(normal_device_detail_active) ||
+              id(normal_device_detail_kind) != NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {
+            return;
+          }
+
+          lv_obj_add_flag(id(normal_device_wifi_online_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_wifi_offline_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_homeassistant_online_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_homeassistant_offline_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_index_text), LV_OBJ_FLAG_HIDDEN);
+
+          int detail_index = id(normal_device_detail_index);
+          if (detail_index < 0) detail_index = 0;
+          if (detail_index > 9) detail_index = 9;
+
+          const std::string device_entity_id = id(ui_presenter)->get_normal_device_entity_id(detail_index);
+          std::string device_title = ha_entity_title_from_registry_cache(device_entity_id);
+          if (device_title.empty()) {
+            device_title = device_entity_id;
+          }
+
+          const auto &st = custom_logic_entity_sub::climate_slot_states()[detail_index];
+          const bool have_state = (st.entity_id == device_entity_id);
+          const bool range_ok = have_state && st.min_temp < st.max_temp;
+          const int min_x10 = range_ok ? (int) lroundf(st.min_temp * 10.0f) : 70;
+          const int max_x10 = range_ok ? (int) lroundf(st.max_temp * 10.0f) : 200;
+
+          if (!id(normal_device_detail_climate_adjust_active)) {
+            int from_state = min_x10;
+            if (have_state && !std::isnan(st.target_temperature)) {
+              from_state = (int) lroundf(st.target_temperature * 10.0f);
+            }
+            id(normal_device_detail_climate_target_x10) = from_state;
+          }
+          const int target_x10 = std::clamp(id(normal_device_detail_climate_target_x10), min_x10, max_x10);
+
+          auto set_hidden = [](lv_obj_t *obj, bool hidden) {
+            if (hidden) {
+              lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            } else {
+              lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            }
+          };
+
+          lv_obj_set_style_bg_color(id(normal_climate_page)->obj, lv_color_hex(0x000000), 0);
+          lv_obj_set_style_bg_color(id(normal_climate_detail_shell), lv_color_hex(0x232323), 0);
+          lv_obj_set_style_border_width(id(normal_climate_detail_shell), 0, 0);
+
+          lv_obj_t *arc = id(normal_climate_detail_arc);
+          lv_arc_set_range(arc, min_x10, max_x10);
+          lv_arc_set_value(arc, target_x10);
+
+          std::string mode_text = "Normal";
+          uint32_t mode_color = 0xFABC3D;
+          if (!have_state || st.hvac_mode.empty()) {
+            mode_text = "--";
+            mode_color = 0x808080;
+          } else if (st.hvac_mode == "off") {
+            mode_text = "Arret";
+            mode_color = 0x808080;
+          } else if (st.preset_mode == "eco") {
+            mode_text = "Eco";
+            mode_color = 0x4CAF50;
+          } else if (st.preset_mode == "away") {
+            mode_text = "Hors-gel";
+            mode_color = 0x4FC3F7;
+          }
+          lv_obj_set_style_arc_color(arc, lv_color_hex(mode_color), LV_PART_INDICATOR);
+          lv_obj_set_style_text_color(id(normal_climate_detail_mode), lv_color_hex(mode_color), 0);
+          lv_label_set_text(id(normal_climate_detail_mode), mode_text.c_str());
+
+          char buf[32];
+          snprintf(buf, sizeof(buf), "%.1f°", target_x10 / 10.0f);
+          lv_label_set_text(id(normal_climate_detail_target), buf);
+          if (have_state && !std::isnan(st.current_temperature)) {
+            snprintf(buf, sizeof(buf), "Actuel %.1f°", st.current_temperature);
+          } else {
+            snprintf(buf, sizeof(buf), "Actuel --");
+          }
+          lv_label_set_text(id(normal_climate_detail_current), buf);
+          lv_label_set_text(id(normal_climate_detail_title), device_title.c_str());
+
+          const bool is_online = (detail_index >= 0 && detail_index < 10)
+                                     ? ((id(normal_device_online_mask) & (1 << detail_index)) != 0)
+                                     : true;
+          id(normal_device_detail_online) = is_online;
+          const bool show_connection_overlay = !id(normal_wifi_connected) ||
+                                               !id(normal_ha_api_connected) ||
+                                               !is_online;
+          set_hidden(id(normal_climate_detail_offline_overlay), !show_connection_overlay);
+          const char *offline_text = !id(normal_wifi_connected)
+                                         ? "WiFi disconnected"
+                                         : (!id(normal_ha_api_connected) ? "Home Assistant\ndisconnected" : "Device Offline");
+          lv_label_set_text(id(normal_climate_detail_offline_text), offline_text);
+
+  - id: commit_normal_climate_setpoint
+    mode: restart
+    parameters:
+      wait_ms: int
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return wait_ms > 0;
+          then:
+            - delay: !lambda |-
+                return wait_ms;
+      - if:
+          condition:
+            lambda: |-
+              if (!id(normal_device_detail_active) ||
+                  id(normal_device_detail_kind) != NORMAL_DEVICE_DETAIL_KIND_CLIMATE ||
+                  !id(normal_device_detail_climate_adjust_active)) {
+                return false;
+              }
+              int detail_index = id(normal_device_detail_index);
+              if (detail_index < 0) detail_index = 0;
+              if (detail_index > 9) detail_index = 9;
+              return !id(ui_presenter)->get_normal_device_entity_id(detail_index).empty();
+          then:
+            - homeassistant.service:
+                service: climate.set_temperature
+                data_template:
+                  entity_id: "{{ target_entity_id }}"
+                  temperature: "{{ target_temperature }}"
+                variables:
+                  target_entity_id: !lambda |-
+                    int detail_index = id(normal_device_detail_index);
+                    if (detail_index < 0) detail_index = 0;
+                    if (detail_index > 9) detail_index = 9;
+                    return id(ui_presenter)->get_normal_device_entity_id(detail_index);
+                  target_temperature: !lambda |-
+                    return id(normal_device_detail_climate_target_x10) / 10.0f;
+      - delay: 1500ms
+      - lambda: |-
+          id(normal_device_detail_climate_adjust_active) = false;
 
   - id: refresh_normal_settings_detail_page
     mode: restart
@@ -1730,6 +1874,8 @@ script:
             detail_kind = NORMAL_DEVICE_DETAIL_KIND_CURTAIN;
           } else if (device_type == "automation") {
             detail_kind = NORMAL_DEVICE_DETAIL_KIND_AUTOMATION;
+          } else if (device_type == "climate") {
+            detail_kind = NORMAL_DEVICE_DETAIL_KIND_CLIMATE;
           }
           if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_NONE) {
             ESP_LOGI("normal_mode",
@@ -1796,6 +1942,13 @@ script:
             id(normal_device_detail_curtain_adjust_active) = false;
             lv_scr_load(id(normal_curtain_page)->obj);
             id(refresh_normal_curtain_detail_page).execute();
+            return;
+          }
+          if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {
+            id(normal_device_detail_climate_adjust_active) = false;
+            ESP_LOGI("normal_mode", "climate detail opened for index=%d", detail_index);
+            lv_scr_load(id(normal_climate_page)->obj);
+            id(refresh_normal_climate_detail_page).execute();
             return;
           }
           if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_LIGHT) {
@@ -2068,6 +2221,16 @@ script:
   - id: exit_normal_switch_detail
     mode: restart
     then:
+      - if:
+          condition:
+            lambda: |-
+              return id(normal_device_detail_active) &&
+                     id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+                     id(normal_device_detail_climate_adjust_active);
+          then:
+            - script.execute:
+                id: commit_normal_climate_setpoint
+                wait_ms: 0
       - lambda: |-
           if (!id(normal_device_detail_active)) {
             return;
@@ -2079,6 +2242,7 @@ script:
           id(normal_detail_exit_light_ready) = false;
           id(normal_device_detail_curtain_adjust_active) = false;
           id(normal_device_detail_curtain_adjust_pending) = false;
+          id(normal_device_detail_climate_adjust_active) = false;
           id(normal_detail_light_mode_adjusting) = false;
           id(normal_detail_light_mode_rotated) = false;
           id(normal_detail_light_mode) = 0;

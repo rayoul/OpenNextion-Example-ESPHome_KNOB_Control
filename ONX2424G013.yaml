@@ -1,8 +1,6 @@
 substitutions:
   project_name: onx2424g013
-  project_friendly_name: ONX2424G013
-  # 留空时：normal mode 不强制覆盖 STA，优先使用 captive_portal 保存的配网信息。
-  # 若希望固化网络，可直接填写为与 Home Assistant 同一局域网的 Wi-Fi。
+  project_friendly_name: ONX2424G013_SHT31-D
   wifi_ssid: ""
   wifi_password: ""
   ap_password: ""
@@ -26,6 +24,7 @@ packages:
   mode_router: !include packages/features/mode_router.yaml
   boot_status: !include packages/features/boot_status.yaml
   normal_mode: !include packages/features/normal_mode.yaml
+  sensor_i2c: !include packages/base/sensor_i2c.yaml
 
 preferences:
   flash_write_interval: 5s
