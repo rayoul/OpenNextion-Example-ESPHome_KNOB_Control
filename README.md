@@ -7,7 +7,7 @@ ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP3
 ## Demo
 
 <p align="center">
-  <img src="docs/Back GPIO.PNG">
+  <img src="docs/Back GPIO.png">
 </p>
 
 ## Features
