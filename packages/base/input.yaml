@@ -301,6 +301,52 @@ binary_sensor:
                 return !id(screen_off_state) &&
                        id(ui_presenter)->is_normal_mode_active() &&
                        !id(ui_presenter)->is_standby_active() &&
+                       !id(detail_long_press_exit_fired) &&
+                       !id(key_long_press_handled) &&
+                       id(normal_device_detail_active) &&
+                       id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+                       id(normal_device_detail_online) &&
+                       (millis() - id(key_press_started_ms)) < 688;
+            then:
+              - if:
+                  condition:
+                    lambda: |-
+                      return !id(normal_device_climate_menu_active);
+                  then:
+                    - lambda: |-
+                        int detail_index = id(normal_device_detail_index);
+                        if (detail_index < 0) detail_index = 0;
+                        if (detail_index > 9) detail_index = 9;
+                        const auto &st = custom_logic_entity_sub::climate_slot_states()[detail_index];
+                        int mode_idx = 0;
+                        if (st.entity_id == id(ui_presenter)->get_normal_device_entity_id(detail_index)) {
+                          if (st.hvac_mode == "off") {
+                            mode_idx = 3;
+                          } else if (st.preset_mode == "eco") {
+                            mode_idx = 1;
+                          } else if (st.preset_mode == "away") {
+                            mode_idx = 2;
+                          }
+                        }
+                        id(normal_device_climate_menu_index) = mode_idx;
+                        id(normal_device_climate_menu_active) = true;
+                        ESP_LOGI("input", "climate mode menu opened: index=%d", mode_idx);
+                  else:
+                    - lambda: |-
+                        const int mode_idx = std::clamp(id(normal_device_climate_menu_index), 0, 3);
+                        ESP_LOGI("input", "climate mode validated: index=%d", mode_idx);
+                        id(apply_normal_climate_mode).execute(mode_idx);
+                        id(normal_device_climate_menu_active) = false;
+              - script.execute: refresh_normal_climate_detail_page
+              - lambda: |-
+                  id(key_long_press_handled) = true;
+                  id(ui_presenter)->notify_user_activity();
+        - if:
+            condition:
+              lambda: |-
+                return !id(screen_off_state) &&
+                       id(ui_presenter)->is_normal_mode_active() &&
+                       !id(ui_presenter)->is_standby_active() &&
                        !id(key_long_press_handled) &&
                        id(normal_device_detail_active) &&
                        id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS_BRIGHTNESS;
@@ -837,6 +883,7 @@ sensor:
                        !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
                        id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
                        id(normal_device_detail_online) &&
+                       !id(normal_device_climate_menu_active) &&
                        !id(key_btn).state;
             then:
               - lambda: |-
@@ -863,6 +910,20 @@ sensor:
               - script.execute:
                   id: commit_normal_climate_setpoint
                   wait_ms: 1500
+        - if:
+            condition:
+              lambda: |-
+                return id(normal_knob_event_pass) &&
+                       !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
+                       id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+                       id(normal_device_detail_online) &&
+                       id(normal_device_climate_menu_active) &&
+                       !id(key_btn).state;
+            then:
+              - lambda: |-
+                  id(normal_device_climate_menu_index) = std::clamp(id(normal_device_climate_menu_index) + 1, 0, 3);
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: refresh_normal_climate_detail_page
         - if:
             condition:
               lambda: |-
@@ -1292,6 +1353,7 @@ sensor:
                        !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
                        id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
                        id(normal_device_detail_online) &&
+                       !id(normal_device_climate_menu_active) &&
                        !id(key_btn).state;
             then:
               - lambda: |-
@@ -1318,6 +1380,20 @@ sensor:
               - script.execute:
                   id: commit_normal_climate_setpoint
                   wait_ms: 1500
+        - if:
+            condition:
+              lambda: |-
+                return id(normal_knob_event_pass) &&
+                       !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
+                       id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+                       id(normal_device_detail_online) &&
+                       id(normal_device_climate_menu_active) &&
+                       !id(key_btn).state;
+            then:
+              - lambda: |-
+                  id(normal_device_climate_menu_index) = std::clamp(id(normal_device_climate_menu_index) - 1, 0, 3);
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: refresh_normal_climate_detail_page
         - if:
             condition:
               lambda: |-

@@ -761,6 +761,15 @@ script:
             id(normal_detail_exit_allowed) = false;
             return;
           }
+          if (id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
+              id(normal_device_climate_menu_active) &&
+              id(normal_detail_exit_switch_ready)) {
+            id(normal_device_climate_menu_active) = false;
+            id(normal_detail_exit_allowed) = false;
+            id(key_long_press_handled) = true;
+            id(refresh_normal_climate_detail_page).execute();
+            return;
+          }
           switch (id(normal_device_detail_kind)) {
             case NORMAL_DEVICE_DETAIL_KIND_SWITCH:
             case NORMAL_DEVICE_DETAIL_KIND_PLUG:
@@ -998,6 +1007,27 @@ script:
           lv_label_set_text(id(normal_climate_detail_current), buf);
           lv_label_set_text(id(normal_climate_detail_title), device_title.c_str());
 
+          const bool menu_active = id(normal_device_climate_menu_active);
+          set_hidden(id(normal_climate_menu_overlay), !menu_active);
+          if (menu_active) {
+            static const char *const mode_names[4] = {"Normal", "Eco", "Hors-gel", "Arret"};
+            static const uint32_t mode_colors[4] = {0xFABC3D, 0x4CAF50, 0x4FC3F7, 0xB0B0B0};
+            lv_obj_t *menu_items[4] = {id(normal_climate_menu_item_0), id(normal_climate_menu_item_1),
+                                       id(normal_climate_menu_item_2), id(normal_climate_menu_item_3)};
+            const int selected_mode = std::clamp(id(normal_device_climate_menu_index), 0, 3);
+            char item_buf[32];
+            for (int i = 0; i < 4; i++) {
+              if (i == selected_mode) {
+                snprintf(item_buf, sizeof(item_buf), "> %s <", mode_names[i]);
+                lv_obj_set_style_text_color(menu_items[i], lv_color_hex(mode_colors[i]), 0);
+              } else {
+                snprintf(item_buf, sizeof(item_buf), "%s", mode_names[i]);
+                lv_obj_set_style_text_color(menu_items[i], lv_color_hex(0x606060), 0);
+              }
+              lv_label_set_text(menu_items[i], item_buf);
+            }
+          }
+
           const bool is_online = (detail_index >= 0 && detail_index < 10)
                                      ? ((id(normal_device_online_mask) & (1 << detail_index)) != 0)
                                      : true;
@@ -1052,6 +1082,66 @@ script:
       - delay: 1500ms
       - lambda: |-
           id(normal_device_detail_climate_adjust_active) = false;
+
+  - id: apply_normal_climate_mode
+    mode: restart
+    parameters:
+      mode_idx: int
+    then:
+      - if:
+          condition:
+            lambda: |-
+              if (!id(normal_device_detail_active) || id(normal_device_detail_kind) != NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {
+                return false;
+              }
+              int detail_index = id(normal_device_detail_index);
+              if (detail_index < 0) detail_index = 0;
+              if (detail_index > 9) detail_index = 9;
+              return !id(ui_presenter)->get_normal_device_entity_id(detail_index).empty();
+          then:
+            - if:
+                condition:
+                  lambda: |-
+                    return mode_idx == 3;
+                then:
+                  - homeassistant.service:
+                      service: climate.set_hvac_mode
+                      data_template:
+                        entity_id: "{{ target_entity_id }}"
+                        hvac_mode: "off"
+                      variables:
+                        target_entity_id: !lambda |-
+                          int detail_index = id(normal_device_detail_index);
+                          if (detail_index < 0) detail_index = 0;
+                          if (detail_index > 9) detail_index = 9;
+                          return id(ui_presenter)->get_normal_device_entity_id(detail_index);
+                else:
+                  - homeassistant.service:
+                      service: climate.set_hvac_mode
+                      data_template:
+                        entity_id: "{{ target_entity_id }}"
+                        hvac_mode: "heat"
+                      variables:
+                        target_entity_id: !lambda |-
+                          int detail_index = id(normal_device_detail_index);
+                          if (detail_index < 0) detail_index = 0;
+                          if (detail_index > 9) detail_index = 9;
+                          return id(ui_presenter)->get_normal_device_entity_id(detail_index);
+                  - homeassistant.service:
+                      service: climate.set_preset_mode
+                      data_template:
+                        entity_id: "{{ target_entity_id }}"
+                        preset_mode: "{{ target_preset }}"
+                      variables:
+                        target_entity_id: !lambda |-
+                          int detail_index = id(normal_device_detail_index);
+                          if (detail_index < 0) detail_index = 0;
+                          if (detail_index > 9) detail_index = 9;
+                          return id(ui_presenter)->get_normal_device_entity_id(detail_index);
+                        target_preset: !lambda |-
+                          if (mode_idx == 1) return std::string("eco");
+                          if (mode_idx == 2) return std::string("away");
+                          return std::string("none");
 
   - id: refresh_normal_settings_detail_page
     mode: restart
@@ -1946,6 +2036,7 @@ script:
           }
           if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {
             id(normal_device_detail_climate_adjust_active) = false;
+            id(normal_device_climate_menu_active) = false;
             ESP_LOGI("normal_mode", "climate detail opened for index=%d", detail_index);
             lv_scr_load(id(normal_climate_page)->obj);
             id(refresh_normal_climate_detail_page).execute();
@@ -2257,3 +2348,4 @@ script:
       - script.execute:
           id: show_normal_device_entry_page
           direction: 0
+

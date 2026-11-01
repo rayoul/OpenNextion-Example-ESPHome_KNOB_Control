@@ -1173,6 +1173,14 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: normal_device_climate_menu_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: normal_device_climate_menu_index
+    type: int
+    restore_value: no
+    initial_value: '0'
   - id: normal_settings_selected_index
     type: int
     restore_value: no

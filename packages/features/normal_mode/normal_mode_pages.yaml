@@ -1916,6 +1916,69 @@ lvgl:
                   text_align: CENTER
                   text: "Climate"
               - obj:
+                  id: normal_climate_menu_overlay
+                  x: 0
+                  y: 0
+                  width: 240
+                  height: 240
+                  radius: 120
+                  bg_color: 0x232323
+                  bg_opa: COVER
+                  border_width: 0
+                  pad_all: 0
+                  clickable: false
+                  scrollable: false
+                  hidden: true
+                  widgets:
+                    - label:
+                        id: normal_climate_menu_title
+                        x: 0
+                        y: 30
+                        align: top_mid
+                        text_font: fonts_MiSans_Medium_18
+                        text_color: 0xD2D2D2
+                        text: "Mode"
+                    - label:
+                        id: normal_climate_menu_item_0
+                        x: 0
+                        y: 62
+                        align: top_mid
+                        text_font: fonts_MiSans_Medium_24
+                        text_color: 0x606060
+                        text: "Normal"
+                    - label:
+                        id: normal_climate_menu_item_1
+                        x: 0
+                        y: 94
+                        align: top_mid
+                        text_font: fonts_MiSans_Medium_24
+                        text_color: 0x606060
+                        text: "Normal"
+                    - label:
+                        id: normal_climate_menu_item_2
+                        x: 0
+                        y: 126
+                        align: top_mid
+                        text_font: fonts_MiSans_Medium_24
+                        text_color: 0x606060
+                        text: "Normal"
+                    - label:
+                        id: normal_climate_menu_item_3
+                        x: 0
+                        y: 158
+                        align: top_mid
+                        text_font: fonts_MiSans_Medium_24
+                        text_color: 0x606060
+                        text: "Normal"
+                    - label:
+                        id: normal_climate_menu_hint
+                        x: 0
+                        y: 196
+                        align: top_mid
+                        text_font: fonts_MiSans_Medium_14
+                        text_color: 0x808080
+                        text: "Appui : valider"
+              - obj:
                   id: normal_climate_detail_offline_overlay
                   x: 0
                   y: 0

@@ -1,8 +1,8 @@
 substitutions:
   project_name: onx2424g013
   project_friendly_name: ONX2424G013_SHT31-D
-  wifi_ssid: ""
-  wifi_password: ""
+  wifi_ssid: NearlyTiny_IOT
+  wifi_password: peitavcurr2me
   ap_password: ""
   logger_level: INFO
   uart_baud: "921600"

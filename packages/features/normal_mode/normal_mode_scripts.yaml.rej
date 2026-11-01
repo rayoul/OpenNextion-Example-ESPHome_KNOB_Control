@@ -1,0 +1,77 @@
+--- packages/features/normal_mode/normal_mode_scripts.yaml
++++ packages/features/normal_mode/normal_mode_scripts.yaml
+@@ -2284,3 +2310,74 @@
+           id: show_normal_device_entry_page
+           direction: 0
+ 
++
++  - id: close_normal_climate_mode_menu
++    mode: restart
++    then:
++      - lambda: |-
++          id(normal_device_detail_climate_menu_active) = false;
++          id(normal_device_detail_climate_menu_selected) = 0;
++      - script.execute: refresh_normal_climate_detail_page
++
++  - id: apply_normal_climate_mode
++    mode: restart
++    then:
++      - lambda: |-
++          int selected = id(normal_device_detail_climate_menu_selected);
++          if (selected < 0) selected = 0;
++          if (selected > 3) selected = 3;
++          ESP_LOGI("normal_mode", "climate mode apply: selected=%d", selected);
++          id(normal_device_detail_climate_menu_active) = false;
++      - if:
++          condition:
++            lambda: |-
++              int index = id(normal_device_detail_index);
++              if (index < 0) index = 0;
++              if (index > 9) index = 9;
++              return id(normal_device_detail_online) &&
++                     !id(ui_presenter)->get_normal_device_entity_id(index).empty();
++          then:
++            - homeassistant.service:
++                service: climate.set_hvac_mode
++                data_template:
++                  entity_id: "{{ target_entity_id }}"
++                  hvac_mode: !lambda |-
++                    int selected = id(normal_device_detail_climate_menu_selected);
++                    if (selected < 0) selected = 0;
++                    if (selected > 3) selected = 3;
++                    return selected == 3 ? "off" : "heat";
++                variables:
++                  target_entity_id: !lambda |-
++                    int index = id(normal_device_detail_index);
++                    if (index < 0) index = 0;
++                    if (index > 9) index = 9;
++                    return id(ui_presenter)->get_normal_device_entity_id(index);
++      - if:
++          condition:
++            lambda: |-
++              int selected = id(normal_device_detail_climate_menu_selected);
++              if (selected < 0) selected = 0;
++              if (selected > 3) selected = 3;
++              int index = id(normal_device_detail_index);
++              if (index < 0) index = 0;
++              if (index > 9) index = 9;
++              return (selected == 1 || selected == 2) &&
++                     id(normal_device_detail_online) &&
++                     !id(ui_presenter)->get_normal_device_entity_id(index).empty();
++          then:
++            - homeassistant.service:
++                service: climate.set_preset_mode
++                data_template:
++                  entity_id: "{{ target_entity_id }}"
++                  preset_mode: !lambda |-
++                    int selected = id(normal_device_detail_climate_menu_selected);
++                    if (selected < 0) selected = 0;
++                    if (selected > 3) selected = 3;
++                    return selected == 1 ? "eco" : "away";
++                variables:
++                  target_entity_id: !lambda |-
++                    int index = id(normal_device_detail_index);
++                    if (index < 0) index = 0;
++                    if (index > 9) index = 9;
++                    return id(ui_presenter)->get_normal_device_entity_id(index);
++      - script.execute: refresh_normal_climate_detail_page
