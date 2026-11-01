@@ -4,6 +4,11 @@
 
 ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP32-S3, ESP-IDF, LVGL, and bundled custom components to provide a local Home Assistant control panel.
 
+## About This Fork
+
+This fork extends the original project with additional features, including climate and heating control support.
+Development of the new features is assisted by Claude (Free / Sonnet 5.5).
+
 ## Demo
 
 <p align="center">
