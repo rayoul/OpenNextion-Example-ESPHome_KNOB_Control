@@ -27,12 +27,12 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 - Ajout de la sélection d'une entité **climat** dans Home Assistant.
 - Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
 - Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
+- Heure en mode France (jour, mois, année)
 
 ## A faire
-- Passer l'heure en mode France (jour, mois, année)
+
 - Ajout de la possibilité de choisir la météo comme entité, et de faire remonter sur l'écran la météo heure par heure, ou s'il va pleuvoir dans l'heure
 - Pouvoir changer de langue dans settings
-- Pouvoir faire un minuteur (ajout d'un haut parleur?)
 
 ## Fonctionnalités d'origine
 
