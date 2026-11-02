@@ -32,7 +32,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 - Pouvoir changer de langue dans settings
 - Pouvoir faire un minuteur (ajout d'un haut parleur?)
 
-## Fonctionnalités
+## Fonctionnalités d'origine
 
 - Contrôle des interrupteurs, lumières, prises connectées, volets et automatisations Home Assistant depuis l'écran.
 - Prise en charge du bouton rotatif avec fonction poussoir.
