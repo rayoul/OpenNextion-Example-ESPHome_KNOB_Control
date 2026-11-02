@@ -9,7 +9,14 @@ ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP3
 This fork extends the original project with additional features, including climate and heating control support.
 Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 
-## Demo
+## NEW Features
+
+- add sht31-D temp and humidity sensor, data on home screen and upload to Home Assistant
+- add climate entity to select in home assistant
+- add climate change and mode change on screen
+- Changed the wake-up behavior: when turning the knob, the device now returns to the home screen (previously it opened the entities screen).
+
+## Pictures
 
 <p align="center">
   <img src="docs/Back GPIO.png" alt="Description" style="width:25%; height:auto;">
@@ -20,12 +27,6 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
   <img src="docs/IMG_20261101_225842.jpg" alt="Description" style="width:25%; height:auto;">
 </p>
 
-## NEW Features
-
-- add sht31-D temp and humidity sensor, data on home screen and upload to Home Assistant
-- add climate entity to select in home assistant
-- add climate change and mode change on screen
-- Changed the wake-up behavior: when turning the knob, the device now returns to the home screen (previously it opened the entities screen).
 
 ## To Do
 
@@ -42,6 +43,12 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 - Supports HTTPS manifest-based firmware updates; the current release OTA image is in `firmware/`.
 
 The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardware uses an ESP32-S3 with 16 MB flash, Octal PSRAM, and a GC9A01A round display; use this firmware only with compatible ONX2424G013 hardware.
+
+## DEMO
+
+<p align="center">
+  <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
+</p>
 
 ## Requirements
 
