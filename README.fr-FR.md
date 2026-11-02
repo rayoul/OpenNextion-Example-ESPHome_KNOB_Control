@@ -9,6 +9,25 @@ Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise 
 Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages
 Le developpement des nouvelles fonctionalités est assisté par Claude (free/sonnet 5.5)
 
+## Fonctionnalités d'origine
+
+- Contrôle des interrupteurs, lumières, prises connectées, volets et automatisations Home Assistant depuis l'écran.
+- Prise en charge du bouton rotatif avec fonction poussoir.
+- Réglage de la luminosité de l'écran et des modes veille.
+- Affichage de la météo en mode veille.
+- Configuration Wi-Fi par portail captif lorsqu'aucun réseau n'est configuré.
+- Prise en charge des mises à jour OTA via manifeste HTTPS. L'image OTA actuelle est disponible dans le dossier `firmware/`.
+
+La configuration principale se trouve dans **ONX2424G013.yaml**.
+
+Le matériel cible utilise un **ESP32-S3** avec :
+
+- 16 Mo de mémoire Flash
+- PSRAM Octal
+- Écran rond GC9A01A
+
+Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX2424G013**.
+
 ## Nouvelles fonctionnalités
 
 - Ajout du capteur de température et d'humidité [SHT31-D](docs/Sonde.jpg) avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
@@ -35,26 +54,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 - Ajout de la possibilité de choisir la météo comme entité, et de faire remonter sur l'écran la météo heure par heure, ou s'il va pleuvoir dans l'heure
 - Pouvoir changer de langue dans settings
 
-## Fonctionnalités d'origine
-
-- Contrôle des interrupteurs, lumières, prises connectées, volets et automatisations Home Assistant depuis l'écran.
-- Prise en charge du bouton rotatif avec fonction poussoir.
-- Réglage de la luminosité de l'écran et des modes veille.
-- Affichage de la météo en mode veille.
-- Configuration Wi-Fi par portail captif lorsqu'aucun réseau n'est configuré.
-- Prise en charge des mises à jour OTA via manifeste HTTPS. L'image OTA actuelle est disponible dans le dossier `firmware/`.
-
-La configuration principale se trouve dans **ONX2424G013.yaml**.
-
-Le matériel cible utilise un **ESP32-S3** avec :
-
-- 16 Mo de mémoire Flash
-- PSRAM Octal
-- Écran rond GC9A01A
-
-Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX2424G013**.
-
-## DEMO
+## DEMO (du dépot d'origine)
 
 <p align="center">
   <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
