@@ -21,7 +21,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 ## Images
 
 <p align="center">
-  <img src="docs/Back GPIO.png" alt="Description" style="width:25%; height:auto;">
+  <img src="docs/Back GPIO.png" alt="Description" style="width:250px; height:auto;">
   <img src="docs/HomeScreen.png">
   <img src="docs/Climate.png">
   <img src="docs/NormalSelection.png">
