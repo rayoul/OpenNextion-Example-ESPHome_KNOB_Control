@@ -20,11 +20,12 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 
 <p align="center">
   <img src="docs/Back GPIO.png" alt="Description" style="width:25%; height:auto;">
-  <img src="docs/With temp and humidity.png" alt="Description" style="width:25%; height:auto;">
-  <img src="docs/IMG_20261101_225824.jpg" alt="Description" style="width:25%; height:auto;">
-  <img src="docs/IMG_20261101_225826.jpg" alt="Description" style="width:25%; height:auto;">
-  <img src="docs/IMG_20261101_225816.jpg" alt="Description" style="width:25%; height:auto;">
-  <img src="docs/IMG_20261101_225842.jpg" alt="Description" style="width:25%; height:auto;">
+  <img src="docs/HomeScreen.png">
+  <img src="docs/Climate.png">
+  <img src="NormalSelection.png">
+  <img src="Normal.png">
+  <img src="EcoSelection.png">
+  <img src="Eco.png">
 </p>
 
 
