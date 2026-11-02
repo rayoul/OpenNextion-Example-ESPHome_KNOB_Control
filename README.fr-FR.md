@@ -25,6 +25,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 - Ajout du capteur de température et d'humidité **SHT31-D** avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
 - Ajout de la sélection d'une entité **climat** dans Home Assistant.
 - Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
+- Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
 
 ## A faire
 - Passer l'heure en mode France (jour, mois, année)
