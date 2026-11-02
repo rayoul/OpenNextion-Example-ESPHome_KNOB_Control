@@ -16,7 +16,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 - Ajout de la sélection d'une entité **climat** dans Home Assistant.
 - Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
 - Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
-- Heure en mode France (jour, mois, année); Icone home Assistant placée devant les valeurs du capteur.
+- Heure en mode France (jour, mois, année); Icone Home Assistant placée devant les valeurs du capteur.
 
 ## Images
 
