@@ -46,6 +46,7 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
 - Add the ability to select a weather entity and display hourly weather forecasts on the screen, including whether it will rain within the next hour.
 - Allow users to change the language in the Settings menu.
 
+
 ## DEMO (form original repository)
 
 <p align="center">
