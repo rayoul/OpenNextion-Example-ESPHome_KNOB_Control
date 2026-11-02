@@ -11,7 +11,7 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 
 ## NEW Features
 
-- add sht31-D temp and humidity sensor, data on home screen and upload to Home Assistant
+- add [SHT31-D](docs/Regulateur.jpg) temp and humidity sensor, data on home screen and upload to Home Assistant
   The sensor is connected via I²C, with SDA on pin 10 and SCL on pin 11. To operate correctly, it requires a 3.3 V supply, so I added a voltage regulator connected to the 5 V output.
 - add climate entity to select in home assistant
 - add climate change and mode change on screen
