@@ -29,6 +29,7 @@ class OnxUi : public Component {
   bool is_normal_mode_active() const;
   bool is_standby_active() const;
   void notify_user_activity();
+  void enter_standby_now();
   void set_standby_timeout_ms(uint32_t standby_timeout_ms);
   void set_sleep_mode_config(bool enabled, const std::string &start_time, const std::string &end_time, uint32_t timeout_ms);
   bool get_sleep_mode_enabled() const;

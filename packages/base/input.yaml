@@ -818,6 +818,24 @@ sensor:
         - if:
             condition:
               lambda: |-
+                return id(ui_presenter)->is_normal_mode_active() &&
+                       (id(screen_off_state) || id(sleep_mode_state) ||
+                        (int32_t) (id(home_wake_guard_until_ms) - millis()) > 0);
+            then:
+              - lambda: |-
+                  if (id(screen_off_state) || id(sleep_mode_state)) {
+                    id(home_wake_guard_until_ms) = millis() + 800;
+                    id(home_wake_hold_until_ms) = millis() + 30000;
+                  }
+                  id(home_wake_pending) = true;
+                  id(sleep_mode_state) = false;
+                  id(sleep_wakeup_pending) = false;
+                  id(standby_wakeup_pending) = false;
+                  id(normal_knob_event_pass) = false;
+                  ESP_LOGI("input", "knob wake: screen shows home");
+        - if:
+            condition:
+              lambda: |-
                 if (!id(sleep_mode_state) && id(ui_presenter)->is_standby_active()) {
                   id(standby_wakeup_pending) = true;
                   id(standby_input_suppressed_until_ms) = millis() + 350;
@@ -1271,6 +1289,15 @@ sensor:
               - script.execute: exit_sleep_mode
         - lambda: |-
             id(ui_presenter)->notify_user_activity();
+        - if:
+            condition:
+              lambda: |-
+                return id(home_wake_pending);
+            then:
+              - lambda: |-
+                  id(home_wake_pending) = false;
+                  id(ui_presenter)->enter_standby_now();
+              - lvgl.page.show: standby_page
     on_anticlockwise:
       then:
         - lambda: |-
@@ -1286,6 +1313,24 @@ sensor:
             } else {
               id(normal_knob_event_pass) = false;
             }
+        - if:
+            condition:
+              lambda: |-
+                return id(ui_presenter)->is_normal_mode_active() &&
+                       (id(screen_off_state) || id(sleep_mode_state) ||
+                        (int32_t) (id(home_wake_guard_until_ms) - millis()) > 0);
+            then:
+              - lambda: |-
+                  if (id(screen_off_state) || id(sleep_mode_state)) {
+                    id(home_wake_guard_until_ms) = millis() + 800;
+                    id(home_wake_hold_until_ms) = millis() + 30000;
+                  }
+                  id(home_wake_pending) = true;
+                  id(sleep_mode_state) = false;
+                  id(sleep_wakeup_pending) = false;
+                  id(standby_wakeup_pending) = false;
+                  id(normal_knob_event_pass) = false;
+                  ESP_LOGI("input", "knob wake: screen shows home");
         - if:
             condition:
               lambda: |-
@@ -1740,3 +1785,12 @@ sensor:
               - script.execute: exit_sleep_mode
         - lambda: |-
             id(ui_presenter)->notify_user_activity();
+        - if:
+            condition:
+              lambda: |-
+                return id(home_wake_pending);
+            then:
+              - lambda: |-
+                  id(home_wake_pending) = false;
+                  id(ui_presenter)->enter_standby_now();
+              - lvgl.page.show: standby_page

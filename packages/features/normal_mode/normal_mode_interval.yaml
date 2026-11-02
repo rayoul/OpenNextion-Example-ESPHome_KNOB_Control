@@ -68,6 +68,7 @@ interval:
                      id(normal_ha_added) &&
                      !id(screen_off_state) &&
                      !id(sleep_mode_state) &&
+                     (int32_t) (millis() - id(home_wake_hold_until_ms)) >= 0 &&
                      id(ui_presenter)->should_enter_sleep_mode(now.hour, now.minute);
           then:
             - script.execute: enter_sleep_mode

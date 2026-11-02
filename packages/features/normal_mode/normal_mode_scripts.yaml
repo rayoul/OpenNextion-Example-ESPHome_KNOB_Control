@@ -170,6 +170,8 @@ script:
                 device_kind = 4;
               } else if (device_type == "automation") {
                 device_kind = 10;
+              } else if (device_type == "climate") {
+                device_kind = 11;
               }
             }
 
@@ -182,12 +184,14 @@ script:
                 device_title = "curtain";
               } else if (device_kind == 10) {
                 device_title = "automation";
+              } else if (device_kind == 11) {
+                device_title = "climate";
               } else {
                 device_title = "light";
               }
             }
 
-            set_hidden(w.icon_switch, !(device_kind == 1 || device_kind == 10));
+            set_hidden(w.icon_switch, !(device_kind == 1 || device_kind == 10 || device_kind == 11));
             set_hidden(w.icon_switch_on, true);
             set_hidden(w.icon_plug, device_kind != 3);
             set_hidden(w.icon_plug_on, true);
@@ -197,7 +201,8 @@ script:
             set_hidden(w.icon_settings, device_kind != 5);
             lv_img_set_src(w.icon_switch,
                            device_kind == 10 ? id(normal_device_automation_img)
-                                             : id(normal_device_icon_switch_img));
+                                             : (device_kind == 11 ? id(normal_device_icon_climate_img)
+                                                                  : id(normal_device_icon_switch_img)));
             if (device_kind == 4 && !settings_entry) {
               const uint8_t curtain_position = id(app_storage)->get_normal_ui_device_position(entry_index);
               if (curtain_position >= 100) {

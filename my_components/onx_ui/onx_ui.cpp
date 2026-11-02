@@ -144,6 +144,9 @@ bool OnxUi::is_standby_active() const {
 
 void OnxUi::notify_user_activity() { this->last_user_activity_ms_ = millis(); }
 
+// Simule une inactivité égale au délai de veille : la page d'accueil (veille) s'affiche aussitôt.
+void OnxUi::enter_standby_now() { this->last_user_activity_ms_ = millis() - this->standby_timeout_ms_; }
+
 void OnxUi::set_standby_timeout_ms(uint32_t standby_timeout_ms) {
   this->standby_timeout_ms_ = standby_timeout_ms;
   if (this->storage_ != nullptr && !this->storage_->set_standby_timeout_ms(standby_timeout_ms)) {

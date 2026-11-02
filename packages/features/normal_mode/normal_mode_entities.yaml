@@ -1181,6 +1181,18 @@ globals:
     type: int
     restore_value: no
     initial_value: '0'
+  - id: home_wake_pending
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: home_wake_guard_until_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: home_wake_hold_until_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
   - id: normal_settings_selected_index
     type: int
     restore_value: no
@@ -1469,6 +1481,10 @@ image:
     transparency: alpha_channel
   - file: "./assets/device_list_curtain_closed.svg"
     id: normal_device_icon_curtain_closed_img
+    type: RGB565
+    transparency: alpha_channel
+  - file: "./assets/device_list_climate.svg"
+    id: normal_device_icon_climate_img
     type: RGB565
     transparency: alpha_channel
   - file: "./assets/settings.svg"
