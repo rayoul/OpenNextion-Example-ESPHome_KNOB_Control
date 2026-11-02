@@ -9,7 +9,7 @@ Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise 
 Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages
 Le developpement des nouvelles fonctionalités est assisté par Claude (free/sonnet 5.5)
 
-## Démonstration
+## Images
 
 <p align="center">
   <img src="docs/Back GPIO.png" alt="Description" style="width:25%; height:auto;">
@@ -51,6 +51,13 @@ Le matériel cible utilise un **ESP32-S3** avec :
 - Écran rond GC9A01A
 
 Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX2424G013**.
+
+## DEMO
+
+<p align="center">
+  <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
+</p>
+
 
 ## Prérequis
 
