@@ -16,7 +16,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
   <img src="docs/With temp and humidity.png" alt="Description" style="width:25%; height:auto;">
   <img src="docs/IMG_20261101_225824.jpg" alt="Description" style="width:25%; height:auto;">
   <img src="docs/IMG_20261101_225826.jpg" alt="Description" style="width:25%; height:auto;">
-  <img src="docs/IMG_20261101_225829.jpg" alt="Description" style="width:25%; height:auto;">
+  <img src="docs/IMG_20261101_225816.jpg" alt="Description" style="width:25%; height:auto;">
   <img src="docs/IMG_20261101_225842.jpg" alt="Description" style="width:25%; height:auto;">
 </p>
 
