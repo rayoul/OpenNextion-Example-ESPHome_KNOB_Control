@@ -32,7 +32,7 @@ Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX242
 
 - Ajout du capteur de température et d'humidité [SHT31-D](docs/Sonde.jpg) avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
   Le capteur est branché en I2C SDA sur pin 10 et SCL sur pin 11. pour fonctionner il nécessite 3.3V j'ai mis un [regulateur](docs/Regulateur.jpg) sur la sortie 5V 
-- Ajout de la sélection d'une entité **climat** dans Home Assistant.
+- Ajout de la sélection d'une entité "climate" (Thermostat) dans Home Assistant.
 - Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
 - Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
 - Heure en mode France (jour, mois, année); Icone Home Assistant placée devant les valeurs du capteur.
