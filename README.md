@@ -21,11 +21,20 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 </p>
 
 ## NEW Features
+
 - add sht31-D temp and humidity sensor, data on home screen and upload to Home Assistant
 - add climate entity to select in home assistant
 - add climate change and mode change on screen
 
-## Features
+## To Do
+
+- Change the date/time format to French format (day, month, year).
+- Add the ability to select a weather entity and display hourly weather forecasts on the screen, including whether it will rain within the next hour.
+- Allow users to change the language in the Settings menu.
+- Add a timer feature (possibly requiring the addition of a speaker?).
+
+## Originals Features
+
 - Controls Home Assistant switches, lights, plugs, covers, and automations from the display.
 - Supports rotary and push-button input, screen brightness, standby settings, and standby weather.
 - Provides Wi-Fi captive-portal provisioning when no network has been configured.
