@@ -9,6 +9,14 @@ Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise 
 Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages
 Le developpement des nouvelles fonctionalités est assisté par Claude (free/sonnet 5.5)
 
+## Nouvelles fonctionnalités
+
+- Ajout du capteur de température et d'humidité **SHT31-D** avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
+- Ajout de la sélection d'une entité **climat** dans Home Assistant.
+- Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
+- Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
+- Heure en mode France (jour, mois, année)
+
 ## Images
 
 <p align="center">
@@ -20,14 +28,6 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
   <img src="docs/EcoSelection.png">
   <img src="docs/Eco.png">
 </p>
-
-## Nouvelles fonctionnalités
-
-- Ajout du capteur de température et d'humidité **SHT31-D** avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
-- Ajout de la sélection d'une entité **climat** dans Home Assistant.
-- Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
-- Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
-- Heure en mode France (jour, mois, année)
 
 ## A faire
 
