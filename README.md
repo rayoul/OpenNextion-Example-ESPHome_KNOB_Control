@@ -22,10 +22,10 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
   <img src="docs/Back GPIO.png" alt="Description" style="width:25%; height:auto;">
   <img src="docs/HomeScreen.png">
   <img src="docs/Climate.png">
-  <img src="NormalSelection.png">
-  <img src="Normal.png">
-  <img src="EcoSelection.png">
-  <img src="Eco.png">
+  <img src="docs/NormalSelection.png">
+  <img src="docs/Normal.png">
+  <img src="docs/EcoSelection.png">
+  <img src="docs/Eco.png">
 </p>
 
 
