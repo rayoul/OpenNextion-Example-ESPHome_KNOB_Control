@@ -6,7 +6,7 @@ Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise 
 
 ## A propos de ce Fork
 
-Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages
+Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages. 
 Le developpement des nouvelles fonctionalités est assisté par Claude (free/sonnet 5.5)
 
 ## Fonctionnalités d'origine
