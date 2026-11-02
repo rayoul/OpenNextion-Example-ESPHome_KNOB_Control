@@ -16,7 +16,7 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 - add climate entity to select in home assistant
 - add climate change and mode change on screen
 - Changed the wake-up behavior: when turning the knob, the device now returns to the home screen (previously it opened the entities screen).
-- Date/time format to French format (day, month, year).
+- Date/time format to French format (day, month, year); Moved Home Assistant Icon behind sensor values.
 
 ## Pictures
 
