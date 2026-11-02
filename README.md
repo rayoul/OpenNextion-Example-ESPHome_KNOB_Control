@@ -1,3 +1,4 @@
+# OpenNextion ESPHome Knob Control
 
 [README EN](README.en_EN.md)
 
