@@ -9,6 +9,16 @@ ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP3
 This fork extends the original project with additional features, including climate and heating control support.
 Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 
+## Originals Features
+
+- Controls Home Assistant switches, lights, plugs, covers, and automations from the display.
+- Supports rotary and push-button input, screen brightness, standby settings, and standby weather.
+- Provides Wi-Fi captive-portal provisioning when no network has been configured.
+- Supports HTTPS manifest-based firmware updates; the current release OTA image is in `firmware/`.
+
+The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardware uses an ESP32-S3 with 16 MB flash, Octal PSRAM, and a GC9A01A round display; use this firmware only with compatible ONX2424G013 hardware.
+
+
 ## NEW Features
 
 - add [SHT31-D](docs/Sonde.jpg) temp and humidity sensor, data on home screen and upload to Home Assistant
@@ -36,16 +46,7 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 - Add the ability to select a weather entity and display hourly weather forecasts on the screen, including whether it will rain within the next hour.
 - Allow users to change the language in the Settings menu.
 
-## Originals Features
-
-- Controls Home Assistant switches, lights, plugs, covers, and automations from the display.
-- Supports rotary and push-button input, screen brightness, standby settings, and standby weather.
-- Provides Wi-Fi captive-portal provisioning when no network has been configured.
-- Supports HTTPS manifest-based firmware updates; the current release OTA image is in `firmware/`.
-
-The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardware uses an ESP32-S3 with 16 MB flash, Octal PSRAM, and a GC9A01A round display; use this firmware only with compatible ONX2424G013 hardware.
-
-## DEMO
+## DEMO (form original repository)
 
 <p align="center">
   <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
