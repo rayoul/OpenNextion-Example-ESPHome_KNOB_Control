@@ -25,6 +25,7 @@ Development of the new features is assisted by Claude (Free / Sonnet 5.5).
 - add sht31-D temp and humidity sensor, data on home screen and upload to Home Assistant
 - add climate entity to select in home assistant
 - add climate change and mode change on screen
+- Changed the wake-up behavior: when turning the knob, the device now returns to the home screen (previously it opened the entities screen).
 
 ## To Do
 
