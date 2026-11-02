@@ -1,34 +1,42 @@
-# OpenNextion ESPHome Knob Control
 
-[README FR](README.fr-FR.md)
+[README EN](README.md)
 
-ESPHome firmware project for the ONX2424G013 round knob display. It uses an ESP32-S3, ESP-IDF, LVGL, and bundled custom components to provide a local Home Assistant control panel.
+Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise un **ESP32-S3**, **ESP-IDF**, **LVGL** ainsi que des composants personnalisés intégrés afin de fournir un panneau de contrôle local pour **Home Assistant**.
 
-## About This Fork
+## A propos de ce Fork
 
-This fork extends the original project with additional features, including climate and heating control support.
-Development of the new features is assisted by Claude (Free / Sonnet 5.5).
+Ce fork apporte de nouvelles fonctionnalités notamment pour piloter des chauffages. 
+Le developpement des nouvelles fonctionalités est assisté par Claude (free/sonnet 5.5)
 
-## Originals Features
+## Fonctionnalités d'origine
 
-- Controls Home Assistant switches, lights, plugs, covers, and automations from the display.
-- Supports rotary and push-button input, screen brightness, standby settings, and standby weather.
-- Provides Wi-Fi captive-portal provisioning when no network has been configured.
-- Supports HTTPS manifest-based firmware updates; the current release OTA image is in `firmware/`.
+- Contrôle des interrupteurs, lumières, prises connectées, volets et automatisations Home Assistant depuis l'écran.
+- Prise en charge du bouton rotatif avec fonction poussoir.
+- Réglage de la luminosité de l'écran et des modes veille.
+- Affichage de la météo en mode veille.
+- Configuration Wi-Fi par portail captif lorsqu'aucun réseau n'est configuré.
+- Prise en charge des mises à jour OTA via manifeste HTTPS. L'image OTA actuelle est disponible dans le dossier `firmware/`.
 
-The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardware uses an ESP32-S3 with 16 MB flash, Octal PSRAM, and a GC9A01A round display; use this firmware only with compatible ONX2424G013 hardware.
+La configuration principale se trouve dans **ONX2424G013.yaml**.
 
+Le matériel cible utilise un **ESP32-S3** avec :
 
-## NEW Features
+- 16 Mo de mémoire Flash
+- PSRAM Octal
+- Écran rond GC9A01A
 
-- add [SHT31-D](docs/Sonde.jpg) temp and humidity sensor, data on home screen and upload to Home Assistant
-  The sensor is connected via I²C, with SDA on pin 10 and SCL on pin 11. To operate correctly, it requires a 3.3 V supply, so I added a voltage [regulator](docs/Regulateur.jpg) connected to the 5 V output.
-- add climate entity to select in home assistant
-- add climate change and mode change on screen
-- Changed the wake-up behavior: when turning the knob, the device now returns to the home screen (previously it opened the entities screen).
-- Date/time format to French format (day, month, year); Moved Home Assistant Icon behind sensor values.
+Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX2424G013**.
 
-## Pictures
+## Nouvelles fonctionnalités
+
+- Ajout du capteur de température et d'humidité [SHT31-D](docs/Sonde.jpg) avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
+  Le capteur est branché en I2C SDA sur pin 10 et SCL sur pin 11. pour fonctionner il nécessite 3.3V j'ai mis un [regulateur](docs/Regulateur.jpg) sur la sortie 5V 
+- Ajout de la sélection d'une entité "climate" (Thermostat) dans Home Assistant.
+- Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
+- Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
+- Heure en mode France (jour, mois, année); Icone Home Assistant placée devant les valeurs du capteur.
+
+## Images
 
 <p align="center">
   <img src="docs/Back GPIO.png" alt="Description" style="width:250px; height:auto;">
@@ -40,39 +48,47 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
   <img src="docs/Eco.png">
 </p>
 
+## A faire
 
-## To Do
+- Ajout de la possibilité de choisir la météo comme entité, et de faire remonter sur l'écran la météo heure par heure, ou s'il va pleuvoir dans l'heure
+- Pouvoir changer de langue dans settings
 
-- Add the ability to select a weather entity and display hourly weather forecasts on the screen, including whether it will rain within the next hour.
-- Allow users to change the language in the Settings menu.
-
-
-## DEMO (form original repository)
+## DEMO (du dépot d'origine)
 
 <p align="center">
   <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
 </p>
 
-## Requirements
 
-Build this project with **ESPHome 2026.6.3**. Docker is recommended to keep ESPHome, PlatformIO, and ESP-IDF versions consistent.
+## Prérequis
 
-- Docker, or a local Python environment with `esphome==2026.6.3`
-- Network access for the first build to download dependencies
-- A data-capable USB cable for serial flashing
+Compilez ce projet avec **ESPHome 2026.6.3**.
 
-## Clone and build
+L'utilisation de Docker est recommandée afin de garantir des versions cohérentes d'ESPHome, PlatformIO et ESP-IDF.
 
-Clone the complete repository first. The configuration depends on the included `packages`, `my_components`, `assets`, and `fonts` directories.
+### Logiciels requis
+
+- Docker, ou un environnement Python local avec `esphome==2026.6.3`
+- Un accès Internet lors de la première compilation pour télécharger les dépendances
+- Un câble USB compatible données pour le flashage série
+
+## Clonage et compilation
+
+Clonez d'abord le dépôt complet. La configuration dépend des dossiers suivants :
+
+- `packages`
+- `my_components`
+- `assets`
+- `fonts`
 
 ```bash
 git clone https://github.com/OpenNextion/OpenNextion-Example-ESPHome_KNOB_Control.git
 cd OpenNextion-Example-ESPHome_KNOB_Control
 ```
 
-### Docker (recommended)
+### Docker (recommandé)
 
-Linux/macOS:
+#### Linux/macOS
 
 ```bash
 docker run --rm \
@@ -82,13 +98,13 @@ docker run --rm \
   compile ONX2424G013.yaml
 ```
 
-Windows PowerShell:
+#### Windows PowerShell
 
 ```powershell
 docker run --rm -v "${PWD}:/config" -w /config ghcr.io/esphome/esphome:2026.6.3 compile ONX2424G013.yaml
 ```
 
-### Local ESPHome
+### ESPHome local
 
 ```bash
 python -m pip install "esphome==2026.6.3"
@@ -96,15 +112,19 @@ esphome version
 esphome compile ONX2424G013.yaml
 ```
 
-After a successful build, the factory image for browser-based first-time installation is `.esphome/build/onx2424g013/.pioenvs/onx2424g013/firmware.factory.bin`. For later serial uploads, use the firmware file reported by the ESPHome build output.
+Après une compilation réussie, le firmware destiné à une première installation via navigateur se trouve dans :
 
-## Flash over USB
+```text
+.esphome/build/onx2424g013/.pioenvs/onx2424g013/firmware.factory.bin
+```
 
-Docker is the recommended way to compile and flash this project. You do not need to install ESPHome locally when flashing with Docker or ESPHome Web.
+Pour les téléversements série ultérieurs, utilisez le fichier firmware indiqué dans la sortie de compilation ESPHome.
 
-### Docker (recommended, Linux)
+## Flashage via USB
 
-Pass the actual serial device through to the container. The following command compiles the project if needed and uploads it:
+Docker est la méthode recommandée pour compiler et flasher ce projet.
+
+### Docker (Linux)
 
 ```bash
 docker run --rm \
@@ -115,44 +135,95 @@ docker run --rm \
   run --device /dev/ttyACM0 ONX2424G013.yaml
 ```
 
-Replace `/dev/ttyACM0` with the serial port of your device. If the device does not enter download mode automatically, hold `BOOT` (GPIO0), tap `RESET` if available, then release `BOOT` when upload starts. Restart the device after uploading completes.
+Remplacez `/dev/ttyACM0` par le port série correspondant à votre appareil.
 
-### Local ESPHome CLI
+Si l'appareil ne passe pas automatiquement en mode téléchargement :
 
-If you installed `esphome==2026.6.3` locally as described above, connect the device and run the following command. It compiles the firmware when needed and uploads it. When prompted, select the corresponding serial port, for example `/dev/ttyACM0` or `/dev/ttyUSB0` on Linux, or `COM3` on Windows:
+1. Maintenez le bouton **BOOT** (GPIO0).
+2. Appuyez brièvement sur **RESET** (si disponible).
+3. Relâchez **BOOT** lorsque le téléversement démarre.
+
+Redémarrez l'appareil une fois le transfert terminé.
+
+### ESPHome CLI locale
+
+Si ESPHome est installé localement :
 
 ```bash
 esphome run ONX2424G013.yaml
 ```
 
-Specify the serial port if necessary:
+Ou en précisant le port série :
 
 ```bash
 esphome run --device /dev/ttyACM0 ONX2424G013.yaml
 ```
 
-## Browser installation (first-time flash)
+Sous Linux :
 
-For browser flashing, open [ESPHome Web](https://web.esphome.io/) in Chrome or Edge, connect the device, and select a factory firmware file. This method requires a Chromium-based browser with Web Serial support, but does not require a local ESPHome installation.
+```text
+/dev/ttyACM0
+/dev/ttyUSB0
+```
 
-- **Build from source:** select `.esphome/build/onx2424g013/.pioenvs/onx2424g013/firmware.factory.bin` after compiling the repository.
-- **No local build:** download `onx2424g013.factory_v1.0.1.bin` from the [v1.0.1 release](https://github.com/OpenNextion/OpenNextion-Example-ESPHome_KNOB_Control/releases/tag/v1.0.1), then select that file in ESPHome Web.
+Sous Windows :
 
-## User manual
+```text
+COM3
+```
 
-For device setup, Wi-Fi provisioning, Home Assistant integration, screen operation, and OTA updates, see the [online user manual](https://opennextion.github.io/OpenNextion-Example-ESPHome_KNOB_Control/).
+## Installation via navigateur (premier flash)
 
-## Project layout
+Pour une installation depuis un navigateur :
 
-- `ONX2424G013.yaml`: main ESPHome configuration.
-- `packages/`: split device, connectivity, display, input, and feature configuration.
-- `my_components/`: local ESPHome components.
-- `assets/` and `fonts/`: UI assets and fonts.
-- `docs/`: README demonstration media.
-- `firmware/`: release OTA image and manifest.
-- `User Manual/`: bundled web user manual.
+1. Ouvrez ESPHome Web dans Chrome ou Edge.
+2. Connectez l'appareil.
+3. Sélectionnez un firmware de type Factory.
 
-## Troubleshooting
+Cette méthode nécessite un navigateur basé sur Chromium prenant en charge Web Serial, mais ne requiert pas l'installation locale d'ESPHome.
 
-- **Serial port is not detected:** Use a data-capable USB cable, confirm that the operating system sees the serial device, and close any application using that port.
-- **Assets or components cannot be found during compilation:** Run commands from the root of the cloned repository and retain all project directories.
+### Compilation locale
+
+Sélectionnez :
+
+```text
+.esphome/build/onx2424g013/.pioenvs/onx2424g013/firmware.factory.bin
+```
+
+après compilation.
+
+### Sans compilation locale
+
+Téléchargez :
+
+```text
+onx2424g013.factory_v1.0.1.bin
+```
+
+depuis la publication **v1.0.1**, puis sélectionnez ce fichier dans ESPHome Web.
+
+## Manuel utilisateur
+
+Pour la configuration de l'appareil, le provisionnement Wi-Fi, l'intégration Home Assistant, l'utilisation de l'écran et les mises à jour OTA, consultez le manuel utilisateur en ligne :
+
+https://opennextion.github.io/OpenNextion-Example-ESPHome_KNOB_Control/
+
+## Structure du projet
+
+- `ONX2424G013.yaml` : configuration principale ESPHome.
+- `packages/` : configuration modulaire du matériel, du réseau, de l'affichage, des entrées et des fonctionnalités.
+- `my_components/` : composants ESPHome personnalisés.
+- `assets/` et `fonts/` : ressources graphiques et polices.
+- `docs/` : images et supports de démonstration du README.
+- `firmware/` : image OTA et manifeste de mise à jour.
+- `User Manual/` : manuel utilisateur web intégré.
+
+## Dépannage
+
+1. **Le port série n'est pas détecté :**
+   Utilisez un câble USB compatible transfert de données, vérifiez que le système d'exploitation détecte correctement le périphérique série et assurez-vous qu'aucune autre application n'utilise ce port.
+
+2. **Les ressources ou composants sont introuvables lors de la compilation :**
+   Exécutez les commandes depuis la racine du dépôt cloné et conservez l'ensemble des répertoires du projet.
+
+  
