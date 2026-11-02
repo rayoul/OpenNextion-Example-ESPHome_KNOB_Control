@@ -12,7 +12,7 @@ Le developpement des nouvelles fonctionalités est assisté par Claude (free/son
 ## Nouvelles fonctionnalités
 
 - Ajout du capteur de température et d'humidité [SHT31-D](docs/Sonde.jpg) avec affichage des données sur l'écran d'accueil et remontée vers Home Assistant.
-  Le capteur est branché en I2C Sda sur pin 10 et scl sur pin 11. pour fonctionner il nécessite 3.3V j'ai mis un [regulator](docs/Regulateur.jpg) sur la sortie 5V 
+  Le capteur est branché en I2C SDA sur pin 10 et SCL sur pin 11. pour fonctionner il nécessite 3.3V j'ai mis un [regulator](docs/Regulateur.jpg) sur la sortie 5V 
 - Ajout de la sélection d'une entité **climat** dans Home Assistant.
 - Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
 - Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
