@@ -2542,7 +2542,7 @@ lvgl:
       widgets:
         - image:
             id: standby_wifi_online_widget
-            x: -13
+            x: 0
             y: 10
             width: 20
             align: TOP_MID
@@ -2551,7 +2551,7 @@ lvgl:
               return !id(normal_wifi_connected);
         - image:
             id: standby_wifi_offline_widget
-            x: -13
+            x: 0
             y: 10
             align: TOP_MID
             src: standby_wifi_offline_img
@@ -2559,16 +2559,16 @@ lvgl:
               return id(normal_wifi_connected);
         - image:
             id: standby_homeassistant_online_widget
-            x: 13
-            y: 10
+            x: -52
+            y: 183
             align: TOP_MID
             src: standby_homeassistant_online_img
             hidden: !lambda |-
               return !id(normal_ha_api_connected);
         - image:
             id: standby_homeassistant_offline_widget
-            x: 13
-            y: 10
+            x: -52
+            y: 183
             align: TOP_MID
             src: standby_homeassistant_offline_img
             hidden: !lambda |-
@@ -2727,8 +2727,8 @@ lvgl:
               return humidity1 + "%";
         - label:
             id: standby_indoor_widget
-            x: 0
-            y: 200
+            x: 11
+            y: 180
             align: top_mid
             text_align: center
             text_font: fonts_MiSans_Medium_16
@@ -2745,7 +2745,7 @@ lvgl:
         - label:
             id: standby_date_widget
             x: 0
-            y: 168
+            y: 148
             align: top_mid
             text_font: fonts_MiSans_Medium_20
             text_color: 0xFFFFFF
@@ -2757,7 +2757,15 @@ lvgl:
               if (!now.is_valid()) {
                 return std::string("----");
               }
-              return now.strftime("%a, %b %d");
+              static const char *const jours[7] = {"dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."};
+              static const char *const mois[12] = {"janv.", "févr.", "mars", "avr.", "mai", "juin",
+                                                   "juil.", "août", "sept.", "oct.", "nov.", "déc."};
+              if (now.day_of_week < 1 || now.day_of_week > 7 || now.month < 1 || now.month > 12) {
+                return std::string("----");
+              }
+              char buf[40];
+              snprintf(buf, sizeof(buf), "%s %d %s", jours[now.day_of_week - 1], now.day_of_month, mois[now.month - 1]);
+              return std::string(buf);
         - label:
             id: standby_time_widget
             x: 0

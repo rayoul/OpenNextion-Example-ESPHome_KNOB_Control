@@ -833,6 +833,7 @@ switch:
   - platform: template
     id: normal_gpio_io10
     name: "HMI IO10"
+    internal: true
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
@@ -858,6 +859,7 @@ switch:
   - platform: template
     id: normal_gpio_io11
     name: "HMI IO11"
+    internal: true
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
