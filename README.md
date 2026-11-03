@@ -52,6 +52,7 @@ Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX242
 ## A faire
 
 - Ajout de la possibilité de choisir la météo comme entité, et de faire remonter sur l'écran la météo heure par heure, ou s'il va pleuvoir dans l'heure
+- Modification du comportement pour que les informations des prévisions ne soient pas dans les entités mais sur la page précédente (éviter de devoir entrer puis ressortir de l'entité)
 - Pouvoir changer de langue dans settings
 
 ## DEMO (du dépot d'origine)
