@@ -47,6 +47,11 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
 - Change in behavior so that forecast information is displayed on the previous page rather than within the entities themselves (avoiding the need to enter and then exit each entity).
 - Allow users to change the language in the Settings menu.
 
+## DEMO Weather/Heaters
+
+<p align="center">
+  <img src="docs/New_Firmware.gif" alt="Control home-assistant light">
+</p>
 
 ## DEMO (form original repository)
 
