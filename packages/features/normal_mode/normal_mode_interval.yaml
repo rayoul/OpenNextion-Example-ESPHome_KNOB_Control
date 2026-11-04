@@ -196,6 +196,45 @@ interval:
                      !wifi::global_wifi_component->get_sta().get_ssid().empty() &&
                      id(normal_ha_added) &&
                      id(normal_device_detail_active) &&
+                     id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY &&
+                     !id(ui_presenter)->is_standby_active();
+          then:
+            - lvgl.page.show: normal_weather_hourly_page
+            - script.execute: refresh_normal_weather_hourly_page
+            - if:
+                condition:
+                  lambda: |-
+                    return (millis() - id(normal_weather_hourly_last_fetch_ms)) > 600000;
+                then:
+                  - lambda: |-
+                      id(normal_weather_hourly_last_fetch_ms) = millis();
+                      int detail_index = id(normal_device_detail_index);
+                      if (detail_index < 0) detail_index = 0;
+                      if (detail_index > 9) detail_index = 9;
+                      id(fetch_normal_weather_hourly).execute(id(ui_presenter)->get_normal_device_entity_id(detail_index));
+      - if:
+          condition:
+            lambda: |-
+              return id(ui_presenter)->is_normal_mode_active() &&
+                     wifi::global_wifi_component != nullptr &&
+                     wifi::global_wifi_component->has_sta() &&
+                     !wifi::global_wifi_component->get_sta().get_ssid().empty() &&
+                     id(normal_ha_added) &&
+                     id(normal_device_detail_active) &&
+                     id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN &&
+                     !id(ui_presenter)->is_standby_active();
+          then:
+            - lvgl.page.show: normal_weather_rain_page
+            - script.execute: refresh_normal_weather_rain_page
+      - if:
+          condition:
+            lambda: |-
+              return id(ui_presenter)->is_normal_mode_active() &&
+                     wifi::global_wifi_component != nullptr &&
+                     wifi::global_wifi_component->has_sta() &&
+                     !wifi::global_wifi_component->get_sta().get_ssid().empty() &&
+                     id(normal_ha_added) &&
+                     id(normal_device_detail_active) &&
                      id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS &&
                      !id(ui_presenter)->is_standby_active();
           then:

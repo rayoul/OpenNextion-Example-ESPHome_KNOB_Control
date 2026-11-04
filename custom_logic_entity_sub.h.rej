@@ -1,0 +1,83 @@
+--- custom_logic_entity_sub.h
++++ custom_logic_entity_sub.h
+@@ -947,6 +947,80 @@
+ #endif
+ }
+ 
++// Lit l'attribut 1_hour_forecast du capteur « next rain » Météo-France, quelle que soit sa mise en forme
++// (dictionnaire Python, JSON, texte). Cherche les repères « <n> min » et classe le texte qui suit :
++// 0 = temps sec, 1 = pluie faible, 2 = pluie modérée, 3 = pluie forte. 12 cases de 5 minutes.
++inline bool parse_rain_levels(const std::string &raw, std::array<uint8_t, 12> &levels) {
++  levels.fill(0);
++  struct Mark {
++    size_t start;
++    size_t end;
++    int minute;
++  };
++  std::vector<Mark> marks;
++  for (size_t i = 0; i < raw.size(); i++) {
++    if (raw[i] < '0' || raw[i] > '9') {
++      continue;
++    }
++    if (i > 0 && raw[i - 1] >= '0' && raw[i - 1] <= '9') {
++      continue;
++    }
++    size_t j = i;
++    int value = 0;
++    while (j < raw.size() && raw[j] >= '0' && raw[j] <= '9') {
++      value = value * 10 + (raw[j] - '0');
++      j++;
++    }
++    size_t k = j;
++    while (k < raw.size() && raw[k] == ' ') {
++      k++;
++    }
++    if (k + 3 <= raw.size() && raw.compare(k, 3, "min") == 0) {
++      marks.push_back(Mark{i, k + 3, value});
++      i = k + 2;
++    }
++  }
++  if (marks.empty()) {
++    return false;
++  }
++  std::array<bool, 12> have{};
++  for (size_t m = 0; m < marks.size(); m++) {
++    const size_t desc_start = marks[m].end;
++    const size_t desc_end = (m + 1 < marks.size()) ? marks[m + 1].start : raw.size();
++    std::string desc = raw.substr(desc_start, desc_end - desc_start);
++    for (char &c : desc) {
++      if (c >= 'A' && c <= 'Z') {
++        c = static_cast<char>(c - 'A' + 'a');
++      }
++    }
++    uint8_t level = 0;
++    if (desc.find("fort") != std::string::npos) {
++      level = 3;
++    } else if (desc.find("mod") != std::string::npos) {
++      level = 2;
++    } else if (desc.find("faible") != std::string::npos) {
++      level = 1;
++    }
++    const int idx = marks[m].minute / 5;
++    if (idx < 0 || idx > 11) {
++      continue;
++    }
++    levels[idx] = level;
++    have[idx] = true;
++  }
++  uint8_t previous = 0;
++  bool seen = false;
++  for (size_t i = 0; i < levels.size(); i++) {
++    if (have[i]) {
++      previous = levels[i];
++      seen = true;
++    } else if (seen) {
++      levels[i] = previous;  // créneaux de 30, 40, 50 min absents des données : on reprend le précédent
++    }
++  }
++  return true;
++}
++
+ // Charge utile envoyée par le modèle de réponse côté Home Assistant :
+ // "weather.xxx|HH,condition,temp,precip,vent;HH,condition,temp,precip,vent;..."
+ inline void store_weather_hourly_payload(const std::string &payload) {

@@ -72,6 +72,10 @@ font:
     id: fonts_MiSans_Medium_18
     size: 18
     bpp: 8
+    glyphsets:
+      - GF_Latin_Kernel
+      - GF_Latin_Core
+    ignore_missing_glyphs: true
   - file: "fonts/MiSans-Medium.ttf"
     id: fonts_MiSans_Medium_20
     size: 20

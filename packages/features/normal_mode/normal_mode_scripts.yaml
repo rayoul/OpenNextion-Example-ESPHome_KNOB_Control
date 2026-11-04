@@ -172,6 +172,8 @@ script:
                 device_kind = 10;
               } else if (device_type == "climate") {
                 device_kind = 11;
+              } else if (device_type == "weather" || device_type == "rain") {
+                device_kind = 12;
               }
             }
 
@@ -186,12 +188,14 @@ script:
                 device_title = "automation";
               } else if (device_kind == 11) {
                 device_title = "climate";
+              } else if (device_kind == 12) {
+                device_title = "weather";
               } else {
                 device_title = "light";
               }
             }
 
-            set_hidden(w.icon_switch, !(device_kind == 1 || device_kind == 10 || device_kind == 11));
+            set_hidden(w.icon_switch, !(device_kind == 1 || device_kind == 10 || device_kind == 11 || device_kind == 12));
             set_hidden(w.icon_switch_on, true);
             set_hidden(w.icon_plug, device_kind != 3);
             set_hidden(w.icon_plug_on, true);
@@ -202,7 +206,8 @@ script:
             lv_img_set_src(w.icon_switch,
                            device_kind == 10 ? id(normal_device_automation_img)
                                              : (device_kind == 11 ? id(normal_device_icon_climate_img)
-                                                                  : id(normal_device_icon_switch_img)));
+                                                                  : (device_kind == 12 ? id(normal_device_icon_weather_img)
+                                                                                       : id(normal_device_icon_switch_img))));
             if (device_kind == 4 && !settings_entry) {
               const uint8_t curtain_position = id(app_storage)->get_normal_ui_device_position(entry_index);
               if (curtain_position >= 100) {
@@ -329,6 +334,10 @@ script:
               case 7: target = id(device_7)->obj; break;
               case 8: target = id(device_8)->obj; break;
               default: target = id(device_9)->obj; break;
+            }
+            if (id(ui_presenter)->get_normal_device_type(selected) == "rain") {
+              target = id(normal_weather_rain_page)->obj;
+              id(refresh_normal_weather_rain_page).execute();
             }
           }
 
@@ -736,7 +745,8 @@ script:
             id(normal_detail_exit_switch_ready) = held_ms >= 688;
             id(normal_detail_exit_light_ready) = false;
             id(normal_detail_exit_settings_ready) = false;
-          } else if (kind == NORMAL_DEVICE_DETAIL_KIND_CURTAIN || kind == NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {
+          } else if (kind == NORMAL_DEVICE_DETAIL_KIND_CURTAIN || kind == NORMAL_DEVICE_DETAIL_KIND_CLIMATE ||
+                     kind == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY || kind == NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN) {
             id(normal_detail_exit_switch_ready) = held_ms >= 688;
             id(normal_detail_exit_light_ready) = false;
             id(normal_detail_exit_settings_ready) = false;
@@ -780,6 +790,8 @@ script:
             case NORMAL_DEVICE_DETAIL_KIND_PLUG:
             case NORMAL_DEVICE_DETAIL_KIND_CURTAIN:
             case NORMAL_DEVICE_DETAIL_KIND_CLIMATE:
+            case NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY:
+            case NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN:
             case NORMAL_DEVICE_DETAIL_KIND_AUTOMATION:
               id(normal_detail_exit_allowed) = id(normal_detail_exit_switch_ready);
               break;
@@ -1147,6 +1159,236 @@ script:
                           if (mode_idx == 1) return std::string("eco");
                           if (mode_idx == 2) return std::string("away");
                           return std::string("none");
+
+  - id: refresh_normal_weather_rain_page
+    mode: restart
+    then:
+      - lambda: |-
+          if (!id(ui_presenter)->is_normal_mode_active() || id(ui_presenter)->is_standby_active()) {
+            return;
+          }
+          const bool in_detail = id(normal_device_detail_active) &&
+                                 id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN;
+          int detail_index = 0;
+          if (in_detail) {
+            detail_index = id(normal_device_detail_index);
+            lv_obj_add_flag(id(normal_device_wifi_online_widget), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(id(normal_device_wifi_offline_widget), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(id(normal_device_homeassistant_online_widget), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(id(normal_device_homeassistant_offline_widget), LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(id(normal_device_index_text), LV_OBJ_FLAG_HIDDEN);
+          } else {
+            // Mode liste : la page s'affiche comme une entité, sans avoir à entrer dedans
+            if (id(normal_page_index) != 0 || id(normal_device_detail_active)) {
+              return;
+            }
+            detail_index = id(normal_device_selected_index);
+            if (detail_index < 0 || detail_index >= std::min<int>(id(normal_device_count), 10)) {
+              return;
+            }
+            if (id(ui_presenter)->get_normal_device_type(detail_index) != "rain") {
+              return;
+            }
+          }
+          if (detail_index < 0) detail_index = 0;
+          if (detail_index > 9) detail_index = 9;
+
+          const std::string device_entity_id = id(ui_presenter)->get_normal_device_entity_id(detail_index);
+          std::string device_title = ha_entity_title_from_registry_cache(device_entity_id);
+          if (device_title.empty()) {
+            device_title = device_entity_id;
+          }
+
+          const auto &st = custom_logic_entity_sub::weather_slot_states()[detail_index];
+          const bool mine = (st.entity_id == device_entity_id);
+          std::array<uint8_t, 12> levels{};
+          bool have_data = false;
+          if (mine && !st.rain_forecast.empty()) {
+            have_data = custom_logic_entity_sub::parse_rain_levels(st.rain_forecast, levels);
+          }
+
+          static const int bar_heights[4] = {4, 16, 32, 50};
+          static const uint32_t bar_colors[4] = {0x404040, 0x4FC3F7, 0x1E88E5, 0x7C4DFF};
+          lv_obj_t *bars[12] = {id(normal_rain_bar_0), id(normal_rain_bar_1), id(normal_rain_bar_2), id(normal_rain_bar_3), id(normal_rain_bar_4), id(normal_rain_bar_5), id(normal_rain_bar_6), id(normal_rain_bar_7), id(normal_rain_bar_8), id(normal_rain_bar_9), id(normal_rain_bar_10), id(normal_rain_bar_11)};
+          for (int i = 0; i < 12; i++) {
+            const int lvl = std::min<int>(levels[i], 3);
+            lv_obj_set_height(bars[i], bar_heights[lvl]);
+            lv_obj_set_y(bars[i], 165 - bar_heights[lvl]);
+            lv_obj_set_style_bg_color(bars[i], lv_color_hex(bar_colors[lvl]), 0);
+          }
+
+          char buf[40];
+          uint32_t summary_color = 0xFFFFFF;
+          if (!mine || st.rain_entity_id.empty()) {
+            snprintf(buf, sizeof(buf), "Pas de capteur");
+            summary_color = 0x808080;
+          } else if (!have_data) {
+            snprintf(buf, sizeof(buf), "Pas de donnees");
+            summary_color = 0x808080;
+          } else {
+            int first = -1;
+            for (int i = 0; i < 12; i++) {
+              if (levels[i] > 0) {
+                first = i;
+                break;
+              }
+            }
+            if (first < 0) {
+              snprintf(buf, sizeof(buf), "Pas de pluie");
+              summary_color = 0x4CAF50;
+            } else if (first == 0) {
+              snprintf(buf, sizeof(buf), "Pluie en cours");
+              summary_color = 0x4FC3F7;
+            } else {
+              snprintf(buf, sizeof(buf), "Pluie dans %d min", first * 5);
+              summary_color = 0x4FC3F7;
+            }
+          }
+          lv_label_set_text(id(normal_rain_summary), buf);
+          lv_obj_set_style_text_color(id(normal_rain_summary), lv_color_hex(summary_color), 0);
+          lv_label_set_text(id(normal_rain_title), device_title.c_str());
+
+          auto set_hidden = [](lv_obj_t *obj, bool hidden) {
+            if (hidden) {
+              lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            } else {
+              lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            }
+          };
+          lv_obj_set_style_bg_color(id(normal_weather_rain_page)->obj, lv_color_hex(0x000000), 0);
+          lv_obj_set_style_bg_color(id(normal_rain_shell), lv_color_hex(0x232323), 0);
+          lv_obj_set_style_border_width(id(normal_rain_shell), 0, 0);
+
+          const bool is_online = (id(normal_device_online_mask) & (1 << detail_index)) != 0;
+          if (in_detail) {
+            id(normal_device_detail_online) = is_online;
+          }
+          const bool show_connection_overlay = !id(normal_wifi_connected) ||
+                                               !id(normal_ha_api_connected) ||
+                                               !is_online;
+          set_hidden(id(normal_rain_offline_overlay), !show_connection_overlay);
+          const char *offline_text = !id(normal_wifi_connected)
+                                         ? "WiFi disconnected"
+                                         : (!id(normal_ha_api_connected) ? "Home Assistant\ndisconnected" : "Device Offline");
+          lv_label_set_text(id(normal_rain_offline_text), offline_text);
+
+  - id: refresh_normal_weather_hourly_page
+    mode: restart
+    then:
+      - lambda: |-
+          if (!id(ui_presenter)->is_normal_mode_active() ||
+              id(ui_presenter)->is_standby_active() ||
+              !id(normal_device_detail_active) ||
+              id(normal_device_detail_kind) != NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY) {
+            return;
+          }
+
+          lv_obj_add_flag(id(normal_device_wifi_online_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_wifi_offline_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_homeassistant_online_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_homeassistant_offline_widget), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(normal_device_index_text), LV_OBJ_FLAG_HIDDEN);
+
+          int detail_index = id(normal_device_detail_index);
+          if (detail_index < 0) detail_index = 0;
+          if (detail_index > 9) detail_index = 9;
+
+          const std::string device_entity_id = id(ui_presenter)->get_normal_device_entity_id(detail_index);
+          std::string device_title = ha_entity_title_from_registry_cache(device_entity_id);
+          if (device_title.empty()) {
+            device_title = device_entity_id;
+          }
+
+          const auto &st = custom_logic_entity_sub::weather_slot_states()[detail_index];
+          const int count = (st.entity_id == device_entity_id) ? (int) st.hour_count : 0;
+          const int max_off = std::max(0, count - 4);
+          const int off = std::clamp(id(normal_weather_hourly_offset), 0, max_off);
+          id(normal_weather_hourly_offset) = off;
+
+          lv_obj_t *hour_lbl[4] = {id(normal_wx_hour_0), id(normal_wx_hour_1), id(normal_wx_hour_2), id(normal_wx_hour_3)};
+          lv_obj_t *icon_img[4] = {id(normal_wx_icon_0), id(normal_wx_icon_1), id(normal_wx_icon_2), id(normal_wx_icon_3)};
+          lv_obj_t *temp_lbl[4] = {id(normal_wx_temp_0), id(normal_wx_temp_1), id(normal_wx_temp_2), id(normal_wx_temp_3)};
+          lv_obj_t *rain_lbl[4] = {id(normal_wx_rain_0), id(normal_wx_rain_1), id(normal_wx_rain_2), id(normal_wx_rain_3)};
+          char buf[24];
+          for (int i = 0; i < 4; i++) {
+            const int idx = off + i;
+            if (idx < count) {
+              const auto &h = st.hours[idx];
+              const std::string &c = h.condition;
+              snprintf(buf, sizeof(buf), "%02dh", h.hour);
+              lv_label_set_text(hour_lbl[i], buf);
+              lv_img_set_src(icon_img[i], c == "sunny" ? id(standby_weather_icon_sunny_img) : c == "clear-night" ? id(standby_weather_icon_clear_night_img) : c == "partlycloudy" ? id(standby_weather_icon_partlycloudy_img) : c == "cloudy" ? id(standby_weather_icon_cloudy_img) : c == "fog" ? id(standby_weather_icon_fog_img) : c == "hail" ? id(standby_weather_icon_hail_img) : c == "lightning" ? id(standby_weather_icon_lightning_img) : c == "lightning-rainy" ? id(standby_weather_icon_lightning_rainy_img) : c == "pouring" ? id(standby_weather_icon_pouring_img) : c == "rainy" ? id(standby_weather_icon_rainy_img) : c == "snowy" ? id(standby_weather_icon_snowy_img) : c == "snowy-rainy" ? id(standby_weather_icon_snowy_rainy_img) : c == "windy" ? id(standby_weather_icon_windy_img) : c == "windy-variant" ? id(standby_weather_icon_windy_variant_img) : c == "exceptional" ? id(standby_weather_icon_exceptional_img) : id(standby_weather_icon_unknown_img));
+              if (std::isnan(h.temperature)) {
+                snprintf(buf, sizeof(buf), "--");
+              } else {
+                snprintf(buf, sizeof(buf), "%.0f°", h.temperature);
+              }
+              lv_label_set_text(temp_lbl[i], buf);
+              if (!std::isnan(h.precipitation) && h.precipitation >= 0.05f) {
+                snprintf(buf, sizeof(buf), "%.1fmm", h.precipitation);
+                lv_obj_set_style_text_color(rain_lbl[i], lv_color_hex(0x4FC3F7), 0);
+              } else {
+                buf[0] = '\0';
+                lv_obj_set_style_text_color(rain_lbl[i], lv_color_hex(0x606060), 0);
+              }
+              lv_label_set_text(rain_lbl[i], buf);
+            } else {
+              lv_label_set_text(hour_lbl[i], "--");
+              lv_img_set_src(icon_img[i], id(standby_weather_icon_unknown_img));
+              lv_label_set_text(temp_lbl[i], "--");
+              lv_label_set_text(rain_lbl[i], "");
+            }
+          }
+          if (count > 0) {
+            const int last = std::min(count - 1, off + 3);
+            snprintf(buf, sizeof(buf), "%02dh - %02dh", st.hours[off].hour, st.hours[last].hour);
+          } else {
+            snprintf(buf, sizeof(buf), "Chargement...");
+          }
+          lv_label_set_text(id(normal_wx_range), buf);
+          lv_label_set_text(id(normal_wx_title), device_title.c_str());
+
+          auto set_hidden = [](lv_obj_t *obj, bool hidden) {
+            if (hidden) {
+              lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            } else {
+              lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            }
+          };
+          lv_obj_set_style_bg_color(id(normal_weather_hourly_page)->obj, lv_color_hex(0x000000), 0);
+          lv_obj_set_style_bg_color(id(normal_wx_shell), lv_color_hex(0x232323), 0);
+          lv_obj_set_style_border_width(id(normal_wx_shell), 0, 0);
+
+          const bool is_online = (id(normal_device_online_mask) & (1 << detail_index)) != 0;
+          id(normal_device_detail_online) = is_online;
+          const bool show_connection_overlay = !id(normal_wifi_connected) ||
+                                               !id(normal_ha_api_connected) ||
+                                               !is_online;
+          set_hidden(id(normal_wx_offline_overlay), !show_connection_overlay);
+          const char *offline_text = !id(normal_wifi_connected)
+                                         ? "WiFi disconnected"
+                                         : (!id(normal_ha_api_connected) ? "Home Assistant\ndisconnected" : "Device Offline");
+          lv_label_set_text(id(normal_wx_offline_text), offline_text);
+
+  - id: fetch_normal_weather_hourly
+    mode: restart
+    parameters:
+      weather_entity_id: string
+    then:
+      - homeassistant.action:
+          action: weather.get_forecasts
+          data:
+            entity_id: !lambda |-
+              return weather_entity_id;
+            type: hourly
+          capture_response: true
+          response_template: "{% set k = (response.keys() | list | first) %}{{ k }}|{% for h in response[k].forecast[:24] %}{{ (h.datetime | as_datetime | as_local).strftime('%H') }},{{ h.condition }},{{ h.temperature | default(0, true) }},{{ h.precipitation | default(0, true) }},{{ h.wind_speed | default(0, true) }}{{ ';' if not loop.last else '' }}{% endfor %}"
+          on_success:
+            - lambda: |-
+                const std::string payload = response["response"].as<std::string>();
+                custom_logic_entity_sub::store_weather_hourly_payload(payload);
+          on_error:
+            - logger.log: "Weather hourly forecast request failed"
 
   - id: refresh_normal_settings_detail_page
     mode: restart
@@ -1971,6 +2213,10 @@ script:
             detail_kind = NORMAL_DEVICE_DETAIL_KIND_AUTOMATION;
           } else if (device_type == "climate") {
             detail_kind = NORMAL_DEVICE_DETAIL_KIND_CLIMATE;
+          } else if (device_type == "weather") {
+            detail_kind = NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY;
+          } else if (device_type == "rain") {
+            detail_kind = NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN;
           }
           if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_NONE) {
             ESP_LOGI("normal_mode",
@@ -2037,6 +2283,21 @@ script:
             id(normal_device_detail_curtain_adjust_active) = false;
             lv_scr_load(id(normal_curtain_page)->obj);
             id(refresh_normal_curtain_detail_page).execute();
+            return;
+          }
+          if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN) {
+            ESP_LOGI("normal_mode", "weather rain detail opened for index=%d", detail_index);
+            lv_scr_load(id(normal_weather_rain_page)->obj);
+            id(refresh_normal_weather_rain_page).execute();
+            return;
+          }
+          if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY) {
+            id(normal_weather_hourly_offset) = 0;
+            id(normal_weather_hourly_last_fetch_ms) = millis();
+            ESP_LOGI("normal_mode", "weather hourly detail opened for index=%d", detail_index);
+            lv_scr_load(id(normal_weather_hourly_page)->obj);
+            id(refresh_normal_weather_hourly_page).execute();
+            id(fetch_normal_weather_hourly).execute(id(ui_presenter)->get_normal_device_entity_id(detail_index));
             return;
           }
           if (detail_kind == NORMAL_DEVICE_DETAIL_KIND_CLIMATE) {

@@ -46,6 +46,8 @@ enum NormalDeviceDetailKind : int {
   NORMAL_DEVICE_DETAIL_KIND_SETTINGS_USER_MANUAL = 11,
   NORMAL_DEVICE_DETAIL_KIND_SETTINGS_USER_MANUAL_QR_CODE = 12,
   NORMAL_DEVICE_DETAIL_KIND_CLIMATE = 13,
+  NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY = 14,
+  NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN = 15,
 };
 static constexpr uint8_t NORMAL_LIGHT_FEEDBACK_BRIGHTNESS = 0x01;
 static constexpr uint8_t NORMAL_LIGHT_FEEDBACK_COLOR_TEMPERATURE = 0x02;
@@ -2102,6 +2104,12 @@ inline std::string custom_type_from_device1_type_option(const std::string &optio
   if (option == "Climate") {
     return "climate";
   }
+  if (option == "Weather (Hourly)") {
+    return "weather";
+  }
+  if (option == "Weather (Rain)") {
+    return "rain";
+  }
   return "switch";
 }
 
@@ -2226,6 +2234,8 @@ inline std::string preferred_device_type_option(size_t slot, const char *const *
     preferred = "Automation";
   } else if (domain == "climate") {
     preferred = "Climate";
+  } else if (domain == "weather") {
+    preferred = custom_type == "rain" ? "Weather (Rain)" : "Weather (Hourly)";
   } else {
     preferred = "Switch";
   }
@@ -2260,6 +2270,9 @@ inline bool apply_device_type_options(size_t slot, esphome::select::Select *my_s
     options[option_count++] = "Automation";
   } else if (domain == "climate") {
     options[option_count++] = "Climate";
+  } else if (domain == "weather") {
+    options[option_count++] = "Weather (Hourly)";
+    options[option_count++] = "Weather (Rain)";
   } else {
     options[option_count++] = "none";
   }
@@ -3592,7 +3605,7 @@ inline bool is_supported_normal_device_entity_id(const char *entity_id) {
   }
   return strncmp(entity_id, "switch.", 7) == 0 || strncmp(entity_id, "light.", 6) == 0 ||
          strncmp(entity_id, "cover.", 6) == 0 || strncmp(entity_id, "automation.", 11) == 0 ||
-         strncmp(entity_id, "climate.", 8) == 0;
+         strncmp(entity_id, "climate.", 8) == 0 || strncmp(entity_id, "weather.", 8) == 0;
 }
 
 inline bool is_local_hmi_gpio_switch_entity_id(const std::string &entity_id) {
@@ -4650,6 +4663,8 @@ inline bool fixed_options_contains(const esphome::FixedVector<const char *> &opt
 
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_AUTOMATION;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_CLIMATE;
+using custom_logic::NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY;
+using custom_logic::NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_CURTAIN;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_DIMMING_LIGHT;
 using custom_logic::NORMAL_DEVICE_DETAIL_KIND_LIGHT;

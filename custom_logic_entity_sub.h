@@ -163,6 +163,43 @@ inline std::array<ClimateSlotState, custom_logic::CONFIGURABLE_DEVICE_SLOT_COUNT
   return states;
 }
 
+// État runtime (RAM) des entités météo, indexé par slot UI compact.
+struct WeatherSlotState {
+  std::string entity_id{};       // entité weather.*
+  std::string rain_entity_id{};  // capteur « next rain » Météo-France dérivé du nom
+  std::string condition{};       // état de l'entité (partlycloudy, rainy...)
+  float temperature{NAN};
+  std::string temperature_unit{};
+  float humidity{NAN};
+  std::string rain_state{};     // état du capteur next_rain (horodatage ou unknown)
+  std::string rain_forecast{};  // attribut 1_hour_forecast, texte brut tel que reçu
+  std::string rain_ref{};       // attribut forecast_time_ref
+  struct Hour {
+    int hour{-1};  // heure locale (0-23), calculée côté Home Assistant
+    std::string condition{};
+    float temperature{NAN};
+    float precipitation{NAN};
+    float wind{NAN};
+  };
+  std::array<Hour, 24> hours{};
+  uint8_t hour_count{0};
+  uint32_t hours_updated_ms{0};
+};
+
+inline std::array<WeatherSlotState, custom_logic::CONFIGURABLE_DEVICE_SLOT_COUNT> &weather_slot_states() {
+  static std::array<WeatherSlotState, custom_logic::CONFIGURABLE_DEVICE_SLOT_COUNT> states{};
+  return states;
+}
+
+// weather.meteo_france_forecast_for_city_<ville> -> sensor.meteo_france_rain_for_city_<ville>_next_rain
+inline std::string derive_meteofrance_rain_entity_id(const std::string &weather_entity_id) {
+  static const std::string prefix = "weather.meteo_france_forecast_for_city_";
+  if (weather_entity_id.compare(0, prefix.size(), prefix) != 0) {
+    return "";
+  }
+  return "sensor.meteo_france_rain_for_city_" + weather_entity_id.substr(prefix.size()) + "_next_rain";
+}
+
 inline const std::array<const char *, 3> &weather_attributes() {
   static const std::array<const char *, 3> attrs{{"temperature", "temperature_unit", "humidity"}};
   return attrs;
@@ -394,6 +431,8 @@ class DeviceSlotStateUpdater {
                                 field == "hvac_action" || field == "preset_mode" || field == "min_temp" ||
                                 field == "max_temp")) {
       this->apply_climate_field_(field, value);
+    } else if (this->is_weather_()) {
+      this->apply_weather_state_(field, value);
     } else if (field == "state") {
       this->apply_power_or_cover_state_(value);
     } else if (field == "brightness") {
@@ -512,6 +551,7 @@ class DeviceSlotStateUpdater {
   bool is_cover_() const { return has_prefix(this->entity_id_, "cover."); }
   bool is_automation_() const { return has_prefix(this->entity_id_, "automation."); }
   bool is_climate_() const { return has_prefix(this->entity_id_, "climate."); }
+  bool is_weather_() const { return has_prefix(this->entity_id_, "weather."); }
 
   int parse_int_(const std::string &value, int fallback) const {
     char *end = nullptr;
@@ -619,6 +659,25 @@ class DeviceSlotStateUpdater {
       return true;
     }
     return false;
+  }
+
+  void apply_weather_state_(const std::string &field, const std::string &value) {
+    if (field != "state") {
+      return;
+    }
+    const size_t ui_slot = this->ui_slot_();
+    if (ui_slot == static_cast<size_t>(-1) || ui_slot >= weather_slot_states().size()) {
+      return;
+    }
+    WeatherSlotState &st = weather_slot_states()[ui_slot];
+    if (st.entity_id != this->entity_id_) {
+      st = WeatherSlotState{};
+      st.entity_id = this->entity_id_;
+      st.rain_entity_id = derive_meteofrance_rain_entity_id(this->entity_id_);
+    }
+    st.condition = value;
+    ESP_LOGI(TAG, "%s weather ui_slot=%u entity=%s condition=%s", this->slot_label_().c_str(),
+             static_cast<unsigned>(ui_slot + 1), this->entity_id_.c_str(), value.c_str());
   }
 
   void apply_climate_field_(const std::string &field, const std::string &value) {
@@ -888,6 +947,200 @@ inline void subscribe_field(esphome::api::APIServer *api_server, size_t slot, co
 #endif
 }
 
+// Lit l'attribut 1_hour_forecast du capteur « next rain » Météo-France, quelle que soit sa mise en forme
+// (dictionnaire Python, JSON, texte). Cherche les repères « <n> min » et classe le texte qui suit :
+// 0 = temps sec, 1 = pluie faible, 2 = pluie modérée, 3 = pluie forte. 12 cases de 5 minutes.
+inline bool parse_rain_levels(const std::string &raw, std::array<uint8_t, 12> &levels) {
+  levels.fill(0);
+  struct Mark {
+    size_t start;
+    size_t end;
+    int minute;
+  };
+  std::vector<Mark> marks;
+  for (size_t i = 0; i < raw.size(); i++) {
+    if (raw[i] < '0' || raw[i] > '9') {
+      continue;
+    }
+    if (i > 0 && raw[i - 1] >= '0' && raw[i - 1] <= '9') {
+      continue;
+    }
+    size_t j = i;
+    int value = 0;
+    while (j < raw.size() && raw[j] >= '0' && raw[j] <= '9') {
+      value = value * 10 + (raw[j] - '0');
+      j++;
+    }
+    size_t k = j;
+    while (k < raw.size() && raw[k] == ' ') {
+      k++;
+    }
+    if (k + 3 <= raw.size() && raw.compare(k, 3, "min") == 0) {
+      marks.push_back(Mark{i, k + 3, value});
+      i = k + 2;
+    }
+  }
+  if (marks.empty()) {
+    return false;
+  }
+  std::array<bool, 12> have{};
+  for (size_t m = 0; m < marks.size(); m++) {
+    const size_t desc_start = marks[m].end;
+    const size_t desc_end = (m + 1 < marks.size()) ? marks[m + 1].start : raw.size();
+    std::string desc = raw.substr(desc_start, desc_end - desc_start);
+    for (char &c : desc) {
+      if (c >= 'A' && c <= 'Z') {
+        c = static_cast<char>(c - 'A' + 'a');
+      }
+    }
+    uint8_t level = 0;
+    if (desc.find("fort") != std::string::npos) {
+      level = 3;
+    } else if (desc.find("mod") != std::string::npos) {
+      level = 2;
+    } else if (desc.find("faible") != std::string::npos) {
+      level = 1;
+    }
+    const int idx = marks[m].minute / 5;
+    if (idx < 0 || idx > 11) {
+      continue;
+    }
+    levels[idx] = level;
+    have[idx] = true;
+  }
+  uint8_t previous = 0;
+  bool seen = false;
+  for (size_t i = 0; i < levels.size(); i++) {
+    if (have[i]) {
+      previous = levels[i];
+      seen = true;
+    } else if (seen) {
+      levels[i] = previous;  // créneaux de 30, 40, 50 min absents des données : on reprend le précédent
+    }
+  }
+  return true;
+}
+
+// Charge utile envoyée par le modèle de réponse côté Home Assistant :
+// "weather.xxx|HH,condition,temp,precip,vent;HH,condition,temp,precip,vent;..."
+inline void store_weather_hourly_payload(const std::string &payload) {
+  const size_t bar = payload.find('|');
+  if (bar == std::string::npos) {
+    ESP_LOGW(TAG, "weather hourly: unexpected payload (no entity separator): %s", payload.c_str());
+    return;
+  }
+  const std::string entity_id = payload.substr(0, bar);
+  std::array<WeatherSlotState::Hour, 24> parsed{};
+  size_t count = 0;
+  size_t pos = bar + 1;
+  while (pos < payload.size() && count < parsed.size()) {
+    size_t end = payload.find(';', pos);
+    if (end == std::string::npos) {
+      end = payload.size();
+    }
+    const std::string item = payload.substr(pos, end - pos);
+    pos = end + 1;
+    std::array<std::string, 5> fields{};
+    size_t field_count = 0;
+    size_t start = 0;
+    while (field_count < fields.size()) {
+      const size_t comma = item.find(',', start);
+      if (comma == std::string::npos) {
+        fields[field_count++] = item.substr(start);
+        break;
+      }
+      fields[field_count++] = item.substr(start, comma - start);
+      start = comma + 1;
+    }
+    if (field_count < 4) {
+      continue;
+    }
+    WeatherSlotState::Hour &h = parsed[count++];
+    h.hour = atoi(fields[0].c_str());
+    h.condition = fields[1];
+    h.temperature = strtof(fields[2].c_str(), nullptr);
+    h.precipitation = strtof(fields[3].c_str(), nullptr);
+    h.wind = field_count >= 5 ? strtof(fields[4].c_str(), nullptr) : NAN;
+  }
+  size_t updated = 0;
+  for (WeatherSlotState &st : weather_slot_states()) {
+    if (st.entity_id == entity_id) {
+      st.hours = parsed;
+      st.hour_count = static_cast<uint8_t>(count);
+      st.hours_updated_ms = millis();
+      updated++;
+    }
+  }
+  ESP_LOGI(TAG, "weather hourly: %u hour(s) for %s, stored in %u slot(s)", static_cast<unsigned>(count),
+           entity_id.c_str(), static_cast<unsigned>(updated));
+}
+
+inline void subscribe_weather_slot_field(esphome::api::APIServer *api_server, size_t slot,
+                                         const std::string &owner_entity_id, const std::string &source_entity_id,
+                                         const std::string &field, const std::string &attribute) {
+#ifdef USE_API_HOMEASSISTANT_STATES
+  if (api_server == nullptr || !is_valid_entity_id(source_entity_id)) {
+    return;
+  }
+  api_server->subscribe_home_assistant_state(
+      source_entity_id, esphome::optional<std::string>(attribute),
+      [slot, owner_entity_id, field](esphome::StringRef raw_value) {
+        const std::string value = raw_value.str();
+        custom_logic::load_device_config_if_needed(slot);
+        if (custom_logic::cached_device_entity_id(slot) != owner_entity_id) {
+          return;
+        }
+        const size_t ui_slot = custom_logic::normal_ui_slot_for_device_config_slot(slot);
+        if (ui_slot == static_cast<size_t>(-1) || ui_slot >= weather_slot_states().size()) {
+          return;
+        }
+        WeatherSlotState &st = weather_slot_states()[ui_slot];
+        if (st.entity_id != owner_entity_id) {
+          st = WeatherSlotState{};
+          st.entity_id = owner_entity_id;
+          st.rain_entity_id = derive_meteofrance_rain_entity_id(owner_entity_id);
+        }
+        char *end = nullptr;
+        if (field == "temperature") {
+          const float parsed = strtof(value.c_str(), &end);
+          st.temperature = (end == value.c_str()) ? NAN : parsed;
+        } else if (field == "temperature_unit") {
+          st.temperature_unit = value;
+        } else if (field == "humidity") {
+          const float parsed = strtof(value.c_str(), &end);
+          st.humidity = (end == value.c_str()) ? NAN : parsed;
+        } else if (field == "rain_state") {
+          st.rain_state = value;
+        } else if (field == "rain_forecast") {
+          st.rain_forecast = value;
+        } else if (field == "rain_ref") {
+          st.rain_ref = value;
+        }
+        ESP_LOGI(TAG, "weather ui_slot=%u field=%s value=%s", static_cast<unsigned>(ui_slot + 1), field.c_str(),
+                 value.c_str());
+      });
+#else
+  ESP_LOGW(TAG, "weather entity=%s field=%s skipped; api.homeassistant_states is disabled", source_entity_id.c_str(),
+           field.c_str());
+#endif
+}
+
+inline void subscribe_weather_slot_entity(esphome::api::APIServer *api_server, size_t slot,
+                                          const std::string &entity_id) {
+  for (const char *attribute : weather_attributes()) {
+    subscribe_weather_slot_field(api_server, slot, entity_id, entity_id, attribute, attribute);
+  }
+  const std::string rain_entity_id = derive_meteofrance_rain_entity_id(entity_id);
+  if (rain_entity_id.empty()) {
+    ESP_LOGI(TAG, "weather %s: no Meteo-France rain sensor derived from entity name", entity_id.c_str());
+    return;
+  }
+  subscribe_weather_slot_field(api_server, slot, entity_id, rain_entity_id, "rain_state", "");
+  subscribe_weather_slot_field(api_server, slot, entity_id, rain_entity_id, "rain_forecast", "1_hour_forecast");
+  subscribe_weather_slot_field(api_server, slot, entity_id, rain_entity_id, "rain_ref", "forecast_time_ref");
+  ESP_LOGI(TAG, "weather %s: rain sensor %s", entity_id.c_str(), rain_entity_id.c_str());
+}
+
 inline void subscribe_entity(esphome::api::APIServer *api_server, size_t slot, const std::string &entity_id) {
   if (!is_valid_entity_id(entity_id)) {
     ESP_LOGI(TAG, "%s has no valid dynamic HA entity subscription", custom_logic::device_slot_label(slot).c_str());
@@ -912,6 +1165,8 @@ inline void subscribe_entity(esphome::api::APIServer *api_server, size_t slot, c
     for (const char *attribute : climate_attributes()) {
       subscribe_field(api_server, slot, entity_id, attribute, attribute);
     }
+  } else if (has_prefix(entity_id, "weather.")) {
+    subscribe_weather_slot_entity(api_server, slot, entity_id);
   }
 
   ESP_LOGI(TAG, "%s subscribed HA entity: %s", custom_logic::device_slot_label(slot).c_str(), entity_id.c_str());

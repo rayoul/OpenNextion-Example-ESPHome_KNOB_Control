@@ -304,6 +304,22 @@ binary_sensor:
                        !id(detail_long_press_exit_fired) &&
                        !id(key_long_press_handled) &&
                        id(normal_device_detail_active) &&
+                       id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY &&
+                       (millis() - id(key_press_started_ms)) < 688;
+            then:
+              - lambda: |-
+                  id(key_long_press_handled) = true;
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: exit_normal_switch_detail
+        - if:
+            condition:
+              lambda: |-
+                return !id(screen_off_state) &&
+                       id(ui_presenter)->is_normal_mode_active() &&
+                       !id(ui_presenter)->is_standby_active() &&
+                       !id(detail_long_press_exit_fired) &&
+                       !id(key_long_press_handled) &&
+                       id(normal_device_detail_active) &&
                        id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE &&
                        id(normal_device_detail_online) &&
                        (millis() - id(key_press_started_ms)) < 688;
@@ -643,7 +659,8 @@ binary_sensor:
                              device_type == "cover" || device_type == "chazuo" || device_type == "liang" ||
                              device_type == "dimming_light" || device_type == "dimmable_light" ||
                              device_type == "dimming" || device_type == "automation" ||
-                             device_type == "climate";
+                             device_type == "climate" ||
+                             device_type == "weather";
                   then:
                     - script.execute: enter_normal_switch_detail
                     - lambda: |-
@@ -746,6 +763,8 @@ interval:
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_PLUG ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CURTAIN ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_CLIMATE ||
+                        id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY ||
+                        id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_RAIN ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS_WIFI ||
                         id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_SETTINGS_BRIGHTNESS ||
@@ -815,6 +834,18 @@ sensor:
             } else {
               id(normal_knob_event_pass) = false;
             }
+        - if:
+            condition:
+              lambda: |-
+                return id(normal_knob_event_pass) &&
+                       !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
+                       id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY &&
+                       !id(key_btn).state;
+            then:
+              - lambda: |-
+                  id(normal_weather_hourly_offset) = std::min(id(normal_weather_hourly_offset) + 1, 24);
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: refresh_normal_weather_hourly_page
         - if:
             condition:
               lambda: |-
@@ -1313,6 +1344,18 @@ sensor:
             } else {
               id(normal_knob_event_pass) = false;
             }
+        - if:
+            condition:
+              lambda: |-
+                return id(normal_knob_event_pass) &&
+                       !id(screen_off_state) && id(ui_presenter)->is_normal_mode_active() && !id(ui_presenter)->is_standby_active() && !id(standby_wakeup_pending) &&
+                       id(normal_device_detail_active) && id(normal_device_detail_kind) == NORMAL_DEVICE_DETAIL_KIND_WEATHER_HOURLY &&
+                       !id(key_btn).state;
+            then:
+              - lambda: |-
+                  id(normal_weather_hourly_offset) = std::max(id(normal_weather_hourly_offset) - 1, 0);
+                  id(ui_presenter)->notify_user_activity();
+              - script.execute: refresh_normal_weather_hourly_page
         - if:
             condition:
               lambda: |-

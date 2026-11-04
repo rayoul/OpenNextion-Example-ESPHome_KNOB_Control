@@ -1195,6 +1195,14 @@ globals:
     type: uint32_t
     restore_value: no
     initial_value: '0'
+  - id: normal_weather_hourly_offset
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: normal_weather_hourly_last_fetch_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
   - id: normal_settings_selected_index
     type: int
     restore_value: no
@@ -1489,6 +1497,11 @@ image:
     id: normal_device_icon_climate_img
     type: RGB565
     transparency: alpha_channel
+  - file: "./assets/weather/weather_partlycloudy.svg"
+    id: normal_device_icon_weather_img
+    type: RGB565
+    transparency: alpha_channel
+    resize: 70x70
   - file: "./assets/settings.svg"
     id: normal_device_icon_settings_img
     type: RGB565
