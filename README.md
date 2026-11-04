@@ -1,6 +1,7 @@
 # OpenNextion ESPHome Knob Control
 
 [README EN](README.en_EN.md)
+Je ne suis pas affilié à Nextion, mais j'aime beaucoup ce produit
 
 Projet de firmware ESPHome pour l'afficheur rotatif **ONX2424G013**. Il utilise un **ESP32-S3**, **ESP-IDF**, **LVGL** ainsi que des composants personnalisés intégrés afin de fournir un panneau de contrôle local pour **Home Assistant**.
 
