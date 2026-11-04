@@ -49,6 +49,8 @@ Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX242
   <img src="docs/Normal.png">
   <img src="docs/EcoSelection.png">
   <img src="docs/Eco.png">
+  <img src="docs/WeatherHourByHour.png">
+  <img src="docs/RainNextHour.png">
 </p>
 
 ## A faire
