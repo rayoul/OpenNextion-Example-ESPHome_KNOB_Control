@@ -55,7 +55,7 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
   <img src="docs/New_Firmware.gif" alt="Control home-assistant light">
 </p>
 
-## DEMO (form original repository)
+## DEMO Lights (form original repository)
 
 <p align="center">
   <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
