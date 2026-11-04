@@ -36,7 +36,7 @@ Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX242
 - Ajout du changement de température et du mode de fonctionnement directement depuis l'écran.
 - Changement du comportement au réveil, lorsque l'on tourne la molette on est sur l'écran d'accueil (auparavant sur les entités)
 - Heure en mode France (jour, mois, année); Icone Home Assistant placée devant les valeurs du capteur.
-- - Ajout de la possibilité de choisir la météo comme entité, et de faire remonter sur l'écran la météo heure par heure, ou s'il va pleuvoir dans l'heure
+- Ajout de la possibilité de choisir la météo comme entité, et de faire remonter sur l'écran la météo heure par heure, ou s'il va pleuvoir dans l'heure
 - Modification du comportement pour que les informations des prévisions de pluie dans l'heure ne soient pas dans les entités mais sur la page précédente (éviter de devoir entrer puis ressortir de l'entité)
 
 ## Images
