@@ -55,7 +55,13 @@ Ce firmware doit uniquement être utilisé avec un matériel compatible **ONX242
 - Modification du comportement pour que les informations des prévisions ne soient pas dans les entités mais sur la page précédente (éviter de devoir entrer puis ressortir de l'entité)
 - Pouvoir changer de langue dans settings
 
-## DEMO (du dépot d'origine)
+## DEMO Météo/Chauffages
+
+<p align="center">
+  <img src="docs/New_Firmware.gif" alt="Control home-assistant light">
+</p>
+
+## DEMO Lumières (du dépot d'origine)
 
 <p align="center">
   <img src="docs/control_ha_light.gif" alt="Control home-assistant light">
