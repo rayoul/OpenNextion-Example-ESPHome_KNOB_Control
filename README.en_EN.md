@@ -27,6 +27,8 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
 - add climate change and mode change on screen
 - Changed the wake-up behavior: when turning the knob, the device now returns to the home screen (previously it opened the entities screen).
 - Date/time format to French format (day, month, year); Moved Home Assistant Icon behind sensor values.
+- - Add the ability to select a weather entity and display hourly weather forecasts on the screen, including whether it will rain within the next hour.
+- Change in behavior so that next hour rain forecast information is displayed on the previous page rather than within the entities themselves (avoiding the need to enter and then exit each entity).
 
 ## Pictures
 
@@ -43,8 +45,6 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
 
 ## To Do
 
-- Add the ability to select a weather entity and display hourly weather forecasts on the screen, including whether it will rain within the next hour.
-- Change in behavior so that forecast information is displayed on the previous page rather than within the entities themselves (avoiding the need to enter and then exit each entity).
 - Allow users to change the language in the Settings menu.
 
 ## DEMO Weather/Heaters
