@@ -40,6 +40,8 @@ The main configuration is [ONX2424G013.yaml](ONX2424G013.yaml). The target hardw
   <img src="docs/Normal.png">
   <img src="docs/EcoSelection.png">
   <img src="docs/Eco.png">
+  <img src="docs/WeatherHourByHour.png">
+  <img src="docs/RainNextHour.png">
 </p>
 
 
